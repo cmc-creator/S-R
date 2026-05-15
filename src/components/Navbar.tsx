@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { Role } from "@prisma/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SRSuiteLockup } from "@/components/SRSuiteLogo";
 
 interface Props {
   user: { name: string; email: string; role: Role; title?: string };
@@ -77,49 +78,8 @@ export default function Navbar({ user }: Props) {
       >
         {/* Left: Logo + Nav */}
         <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
-          <Link
-            href="/dashboard"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 9,
-              textDecoration: "none",
-              flexShrink: 0,
-            }}
-          >
-            <div
-              style={{
-                width: 26,
-                height: 26,
-                borderRadius: 7,
-                background: "var(--accent)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <span
-                style={{
-                  color: "var(--accent-fg)",
-                  fontSize: 9,
-                  fontWeight: 700,
-                  letterSpacing: "0.05em",
-                }}
-              >
-                DS
-              </span>
-            </div>
-            <span
-              style={{
-                fontSize: 14,
-                fontWeight: 600,
-                letterSpacing: "-0.01em",
-                color: "var(--text)",
-              }}
-            >
-              Destiny Springs
-            </span>
+          <Link href="/dashboard" style={{ textDecoration: "none", flexShrink: 0 }}>
+            <SRSuiteLockup size={26} />
           </Link>
 
           {/* Nav links */}

@@ -7,8 +7,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
 
 export const metadata: Metadata = {
-  title: "Destiny Springs S&R",
-  description: "Mental health inpatient seclusion & restraint documentation",
+  title: "SR Suite",
+  description: "Seclusion & restraint documentation platform for behavioral health",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

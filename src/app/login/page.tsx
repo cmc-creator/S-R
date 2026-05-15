@@ -3,6 +3,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SRSuiteMark, SRSuiteLockup } from "@/components/SRSuiteLogo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,33 +32,7 @@ export default function LoginPage() {
     >
       {/* Top bar */}
       <header className="flex items-center justify-between px-6 py-4 md:px-10">
-        <div className="flex items-center gap-2.5">
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 7,
-              background: "var(--accent)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <span
-              style={{
-                color: "var(--accent-fg)",
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: "0.05em",
-              }}
-            >
-              DS
-            </span>
-          </div>
-          <span style={{ color: "var(--text)", fontWeight: 600, fontSize: 14, letterSpacing: "-0.01em" }}>
-            Destiny Springs
-          </span>
-        </div>
+        <SRSuiteLockup size={26} />
         <ThemeToggle />
       </header>
 
@@ -67,22 +42,8 @@ export default function LoginPage() {
 
           {/* Brand mark */}
           <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 14,
-                background: "var(--accent)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 20px",
-                boxShadow: "0 8px 32px var(--gold-faint)",
-              }}
-            >
-              <span style={{ color: "var(--accent-fg)", fontSize: 18, fontWeight: 700, letterSpacing: "0.02em" }}>
-                DS
-              </span>
+            <div style={{ display: "flex", justifyContent: "center", margin: "0 auto 20px" }}>
+              <SRSuiteMark size={56} />
             </div>
             <p
               style={{
@@ -151,7 +112,7 @@ export default function LoginPage() {
                     autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@destinysprings.com"
+                    placeholder="you@yourfacility.com"
                     style={{
                       width: "100%",
                       background: "var(--bg-subtle)",
@@ -263,7 +224,7 @@ export default function LoginPage() {
               letterSpacing: "0.02em",
             }}
           >
-            Destiny Springs Behavioral Health &copy; {new Date().getFullYear()}
+            SR Suite &copy; {new Date().getFullYear()} &mdash; Built for behavioral health
           </p>
         </div>
       </main>
