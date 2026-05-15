@@ -36,9 +36,10 @@ export default function SignaturePad({ value, onChange, label, error }: Signatur
         <label className="block text-sm font-semibold text-gray-800 mb-1">{label}</label>
       )}
       <div
-        className={`border rounded-lg overflow-hidden bg-white ${
+        className={`border rounded-lg overflow-hidden ${
           error ? "border-red-400" : "border-gray-400"
         }`}
+        style={{ background: "white" }}
       >
         <ReactSignatureCanvas
           ref={sigRef}

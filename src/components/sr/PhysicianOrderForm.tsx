@@ -342,6 +342,6 @@ export function SRField({ label, children }: { label: string; children: React.Re
   );
 }
 
-export const inp = "w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder:text-slate-400";
-export const btnPrimary = "bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-800 hover:to-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed";
+export const inp = "w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 bg-white focus:outline-none transition placeholder:text-slate-400";
+export const btnPrimary = "bg-[var(--accent)] text-[var(--accent-fg)] font-semibold px-6 py-2.5 rounded-lg transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed";
 export const btnSecondary = "border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium px-6 py-2.5 rounded-lg transition";

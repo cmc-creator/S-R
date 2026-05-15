@@ -52,27 +52,41 @@ function NewSRPacketContent() {
   function finish() { router.push(`/dashboard/sr-packets/${packetId}`); }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">S&amp;R Packet</h1>
-        <p className="text-sm text-slate-500">Seclusion / Physical Hold / Chemical Restraint Documentation</p>
+    <div style={{ maxWidth: 896, margin: "0 auto" }}>
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text)", margin: 0 }}>S&amp;R Packet</h1>
+        <p style={{ fontSize: "0.875rem", color: "var(--text-3)", marginTop: 4 }}>Seclusion / Physical Hold / Chemical Restraint Documentation</p>
       </div>
 
       {/* Stepper */}
-      <div className="flex overflow-x-auto gap-1.5 mb-8 pb-2">
+      <div style={{ display: "flex", overflowX: "auto", gap: 6, marginBottom: 32, paddingBottom: 8 }}>
         {STEPS.map((s, i) => (
           <button
             key={s}
             type="button"
             disabled={packetId === null && i > 0}
             onClick={() => packetId && setStep(i)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition ${
-              i === step
-                ? "bg-gradient-to-r from-blue-700 to-blue-600 text-white shadow-sm"
+            style={{
+              flexShrink: 0,
+              padding: "6px 12px",
+              borderRadius: 9999,
+              fontSize: "0.75rem",
+              fontWeight: 500,
+              border: "none",
+              cursor: packetId || i === 0 ? "pointer" : "default",
+              opacity: packetId === null && i > 0 ? 0.4 : 1,
+              transition: "all 0.15s",
+              background: i === step
+                ? "var(--accent)"
                 : i < step
-                ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                : "bg-slate-100 text-slate-500"
-            }`}
+                ? "rgba(16,185,129,0.12)"
+                : "var(--bg-subtle)",
+              color: i === step
+                ? "var(--accent-fg)"
+                : i < step
+                ? "#34d399"
+                : "var(--text-3)",
+            }}
           >
             {i + 1}. {s}
           </button>
@@ -81,30 +95,40 @@ function NewSRPacketContent() {
 
       {/* Step content */}
       {step === 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <div style={{ background: "var(--bg-elevated)", borderRadius: 12, border: "1px solid var(--border)", padding: 24, display: "flex", flexDirection: "column", gap: 24 }}>
           <div>
-            <h2 className="font-bold text-lg text-slate-900 mb-1">Cover Sheet</h2>
-            <p className="text-sm text-slate-500">
+            <h2 style={{ fontWeight: 700, fontSize: "1.125rem", color: "var(--text)", marginBottom: 4 }}>Cover Sheet</h2>
+            <p style={{ fontSize: "0.875rem", color: "var(--text-3)" }}>
               The following forms must be completed for ANY seclusion/personal or chemical restraint.
               Ensure to include the incident report associated with the S&amp;R.
             </p>
           </div>
           {incidentId && (
-            <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg px-4 py-3">
+            <div style={{ background: "var(--gold-faint)", border: "1px solid rgba(201,168,76,0.3)", color: "var(--gold)", fontSize: "0.875rem", borderRadius: 8, padding: "12px 16px" }}>
               Linked to Incident Report: <strong>{incidentId}</strong>
             </div>
           )}
           <div>
-            <p className="text-sm font-semibold text-slate-700 mb-2">Patient</p>
+            <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--text-2)", marginBottom: 8 }}>Patient</p>
             <PatientSelector value={patientId} onChange={setPatientId} />
           </div>
-          {error && <p className="text-red-600 text-sm">{error}</p>}
-          <div className="flex justify-end">
+          {error && <p style={{ color: "var(--danger)", fontSize: "0.875rem" }}>{error}</p>}
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <button
               type="button"
               onClick={createPacket}
               disabled={creating}
-              className="bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-800 hover:to-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg transition shadow-sm disabled:opacity-60"
+              style={{
+                background: "var(--accent)",
+                color: "var(--accent-fg)",
+                fontWeight: 600,
+                padding: "10px 24px",
+                borderRadius: 8,
+                border: "none",
+                cursor: creating ? "default" : "pointer",
+                opacity: creating ? 0.6 : 1,
+                fontSize: "0.875rem",
+              }}
             >
               {creating ? "Creating…" : "Start Packet →"}
             </button>
@@ -139,7 +163,7 @@ function NewSRPacketContent() {
 
 export default function NewSRPacketPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-gray-400">Loading…</div>}>
+    <Suspense fallback={<div style={{ padding: 32, color: "var(--text-3)", textAlign: "center" }}>Loading…</div>}>
       <NewSRPacketContent />
     </Suspense>
   );
