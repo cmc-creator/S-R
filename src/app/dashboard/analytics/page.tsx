@@ -98,11 +98,11 @@ export default async function AnalyticsPage() {
   for (const r of reports) {
     if (r.incidentLevel) levelCount[r.incidentLevel] = (levelCount[r.incidentLevel] ?? 0) + 1;
   }
-  const levelColors: Record<string, string> = {
-    I: "border-green-400 bg-green-50 text-green-700",
-    II: "border-yellow-400 bg-yellow-50 text-yellow-700",
-    III: "border-orange-400 bg-orange-50 text-orange-700",
-    IV: "border-red-400 bg-red-50 text-red-700",
+  const levelColors: Record<string, { border: string; bg: string; text: string }> = {
+    I:   { border: "#4ade80", bg: "rgba(74,222,128,0.08)",  text: "#16a34a" },
+    II:  { border: "#fbbf24", bg: "rgba(251,191,36,0.08)",  text: "#d97706" },
+    III: { border: "#fb923c", bg: "rgba(251,146,60,0.08)",  text: "#ea580c" },
+    IV:  { border: "#f87171", bg: "rgba(248,113,113,0.08)", text: "#dc2626" },
   };
 
   // Day of week breakdown
@@ -181,14 +181,14 @@ export default async function AnalyticsPage() {
   const maxReporter = Math.max(...topReporters.map(([, v]) => v), 1);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexDirection: "column", gap: 28 }}>
       {/* Header */}
       <div>
-        <Link href="/dashboard" className="text-sm text-blue-600 hover:underline">
+        <Link href="/dashboard" style={{ fontSize: 13, color: "var(--gold)", textDecoration: "none" }}>
           ← Dashboard
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-1">QAPI Analytics</h1>
-        <p className="text-sm text-gray-500">
+        <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", margin: "8px 0 4px" }}>QAPI Analytics</h1>
+        <p style={{ fontSize: 13, color: "var(--text-2)" }}>
           Quality Assurance &amp; Performance Improvement — Incident Reporting &nbsp;·&nbsp;
           Generated {format(now, "MMMM d, yyyy")}
         </p>
@@ -196,27 +196,27 @@ export default async function AnalyticsPage() {
 
       {/* Top Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="This Month" value={thisMonth.length} sub={format(now, "MMMM yyyy")} color="blue" />
-        <StatCard label="Year to Date" value={ytd.length} sub={format(now, "yyyy")} color="indigo" />
-        <StatCard label="Total on Record" value={reports.length} sub="all time" color="purple" />
-        <StatCard label="S&R Linked" value={withSR.length} sub="incidents with S&R packet" color="rose" />
+        <StatCard label="This Month" value={thisMonth.length} sub={format(now, "MMMM yyyy")} />
+        <StatCard label="Year to Date" value={ytd.length} sub={format(now, "yyyy")} />
+        <StatCard label="Total on Record" value={reports.length} sub="all time" />
+        <StatCard label="S&R Linked" value={withSR.length} sub="incidents with S&R packet" />
       </div>
 
       {/* Review Status Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="QM Review Rate" value={qmRate} sub={`${qmReviewedCount} of ${reports.length} signed`} color={qmRate === 100 ? "green" : "amber"} pct />
-        <StatCard label="Supervisor Review Rate" value={supRate} sub={`${supReviewedCount} of ${reports.length} signed`} color={supRate === 100 ? "green" : "amber"} pct />
-        <StatCard label="Pending QM Review" value={pendingQM.length} sub="no QM signature" color={pendingQM.length > 0 ? "amber" : "green"} />
-        <StatCard label="Pending Sup Review" value={pendingSup.length} sub="no supervisor signature" color={pendingSup.length > 0 ? "amber" : "green"} />
+        <StatCard label="QM Review Rate" value={qmRate} sub={`${qmReviewedCount} of ${reports.length} signed`} pct />
+        <StatCard label="Supervisor Review Rate" value={supRate} sub={`${supReviewedCount} of ${reports.length} signed`} pct />
+        <StatCard label="Pending QM Review" value={pendingQM.length} sub="no QM signature" />
+        <StatCard label="Pending Sup Review" value={pendingSup.length} sub="no supervisor signature" />
       </div>
 
       {/* Avg time to review */}
       {avgDaysToReview !== null && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl px-5 py-4 flex items-center gap-4">
-          <div className="text-4xl font-bold text-blue-700">{avgDaysToReview}</div>
+        <div style={{ background: "var(--gold-faint)", border: "1px solid var(--border)", borderRadius: 12, padding: "16px 20px", display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ fontSize: 36, fontWeight: 700, color: "var(--gold)", lineHeight: 1 }}>{avgDaysToReview}</div>
           <div>
-            <p className="font-semibold text-blue-900 text-sm">Avg. Days to QM Review</p>
-            <p className="text-xs text-blue-600">From incident date to completed QM signature ({reviewedWithDates.length} reviewed incidents)</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: 0 }}>Avg. Days to QM Review</p>
+            <p style={{ fontSize: 12, color: "var(--text-2)", marginTop: 3 }}>From incident date to completed QM signature ({reviewedWithDates.length} reviewed incidents)</p>
           </div>
         </div>
       )}
@@ -226,35 +226,35 @@ export default async function AnalyticsPage() {
         <div className="flex items-end gap-1.5 h-44 pt-4 mt-2">
           {monthlyTrend.map(({ label, shortYear, total, reviewed }) => (
             <div key={`${label}${shortYear}`} className="flex-1 flex flex-col items-center gap-0.5">
-              <span className="text-[10px] font-semibold text-gray-600">{total || ""}</span>
+              <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-2)" }}>{total || ""}</span>
               <div className="w-full flex flex-col-reverse" style={{ height: `${(total / maxMonthly) * 130}px`, minHeight: total > 0 ? 4 : 0 }}>
                 <div className="w-full rounded-t-sm bg-blue-500" style={{ height: `${(reviewed / Math.max(total, 1)) * 100}%` }} title={`${reviewed} reviewed`} />
                 <div className="w-full bg-blue-200" style={{ height: `${((total - reviewed) / Math.max(total, 1)) * 100}%` }} title={`${total - reviewed} pending`} />
               </div>
-              <span className="text-[10px] text-gray-400 leading-none">{label}</span>
-              <span className="text-[9px] text-gray-300 leading-none">{shortYear}</span>
+              <span style={{ fontSize: 10, color: "var(--text-3)", lineHeight: 1 }}>{label}</span>
+              <span style={{ fontSize: 9, color: "var(--text-3)", lineHeight: 1, opacity: 0.7 }}>{shortYear}</span>
             </div>
           ))}
         </div>
-        <div className="flex gap-4 mt-3 text-xs text-gray-500">
-          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-blue-500 inline-block" /> QM Reviewed</span>
-          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-blue-200 inline-block" /> Pending Review</span>
+        <div style={{ display: "flex", gap: 16, marginTop: 12, fontSize: 12, color: "var(--text-2)" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: "#3b82f6", display: "inline-block" }} /> QM Reviewed</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: "#93c5fd", display: "inline-block" }} /> Pending Review</span>
         </div>
       </Section>
 
       {/* Categories + Units */}
       <div className="grid md:grid-cols-2 gap-6">
         <Section title="Top Incident Categories">
-          <div className="space-y-2 mt-2">
-            {topCategories.length === 0 && <p className="text-sm text-gray-400 italic">No data yet.</p>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6 }}>
+            {topCategories.length === 0 && <p style={{ fontSize: 13, color: "var(--text-3)", fontStyle: "italic" }}>No data yet.</p>}
             {topCategories.map(([cat, count]) => (
               <div key={cat}>
-                <div className="flex justify-between text-xs mb-0.5">
-                  <span className="text-gray-700 truncate max-w-[70%]">{cat}</span>
-                  <span className="font-semibold text-gray-800">{count}</span>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}>
+                  <span style={{ color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "70%" }}>{cat}</span>
+                  <span style={{ fontWeight: 600, color: "var(--text)" }}>{count}</span>
                 </div>
-                <div className="h-2 rounded-full bg-gray-100">
-                  <div className="h-2 rounded-full bg-indigo-500" style={{ width: `${(count / maxCat) * 100}%` }} />
+                <div style={{ height: 6, borderRadius: 3, background: "var(--bg-hover)" }}>
+                  <div style={{ height: 6, borderRadius: 3, background: "#6366f1", width: `${(count / maxCat) * 100}%` }} />
                 </div>
               </div>
             ))}
@@ -262,16 +262,16 @@ export default async function AnalyticsPage() {
         </Section>
 
         <Section title="Incidents by Unit">
-          <div className="space-y-2 mt-2">
-            {unitBreakdown.length === 0 && <p className="text-sm text-gray-400 italic">No data yet.</p>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6 }}>
+            {unitBreakdown.length === 0 && <p style={{ fontSize: 13, color: "var(--text-3)", fontStyle: "italic" }}>No data yet.</p>}
             {unitBreakdown.map(([unit, count]) => (
               <div key={unit}>
-                <div className="flex justify-between text-xs mb-0.5">
-                  <span className="text-gray-700">{unit}</span>
-                  <span className="font-semibold text-gray-800">{count}</span>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}>
+                  <span style={{ color: "var(--text-2)" }}>{unit}</span>
+                  <span style={{ fontWeight: 600, color: "var(--text)" }}>{count}</span>
                 </div>
-                <div className="h-2 rounded-full bg-gray-100">
-                  <div className="h-2 rounded-full bg-purple-500" style={{ width: `${(count / maxUnit) * 100}%` }} />
+                <div style={{ height: 6, borderRadius: 3, background: "var(--bg-hover)" }}>
+                  <div style={{ height: 6, borderRadius: 3, background: "#a855f7", width: `${(count / maxUnit) * 100}%` }} />
                 </div>
               </div>
             ))}
@@ -282,39 +282,38 @@ export default async function AnalyticsPage() {
       {/* Day of Week + Shift */}
       <div className="grid md:grid-cols-2 gap-6">
         <Section title="Incidents by Day of Week">
-          <div className="flex items-end gap-2 h-32 mt-4">
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 128, marginTop: 16 }}>
             {DOW_LABELS.map((day, i) => (
-              <div key={day} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-[10px] font-semibold text-gray-600">{dowCount[i] || ""}</span>
+              <div key={day} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-2)" }}>{dowCount[i] || ""}</span>
                 <div
-                  className="w-full rounded-t-sm bg-teal-500"
-                  style={{ height: `${(dowCount[i] / maxDow) * 80}px`, minHeight: dowCount[i] > 0 ? 4 : 0 }}
+                  style={{ width: "100%", borderRadius: "3px 3px 0 0", background: "#14b8a6", height: `${(dowCount[i] / maxDow) * 80}px`, minHeight: dowCount[i] > 0 ? 4 : 0 }}
                 />
-                <span className="text-[10px] text-gray-500">{day}</span>
+                <span style={{ fontSize: 10, color: "var(--text-3)" }}>{day}</span>
               </div>
             ))}
           </div>
         </Section>
 
         <Section title="Incidents by Shift">
-          <div className="space-y-3 mt-4">
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
             {(
               [
-                { label: "Day (7a–3p)", count: shiftCount.Day, color: "bg-amber-400" },
-                { label: "Evening (3p–11p)", count: shiftCount.Evening, color: "bg-orange-500" },
-                { label: "Night (11p–7a)", count: shiftCount.Night, color: "bg-blue-800" },
+                { label: "Day (7a–3p)", count: shiftCount.Day, color: "#f59e0b" },
+                { label: "Evening (3p–11p)", count: shiftCount.Evening, color: "#f97316" },
+                { label: "Night (11p–7a)", count: shiftCount.Night, color: "#1d4ed8" },
               ] as { label: string; count: number; color: string }[]
             ).map(({ label, count, color }) => {
               const total = shiftCount.Day + shiftCount.Evening + shiftCount.Night;
               const pct = total ? Math.round((count / total) * 100) : 0;
               return (
                 <div key={label}>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-gray-700 font-medium">{label}</span>
-                    <span className="text-gray-600">{count} &nbsp;<span className="text-gray-400">({pct}%)</span></span>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
+                    <span style={{ fontWeight: 500, color: "var(--text)" }}>{label}</span>
+                    <span style={{ color: "var(--text-2)" }}>{count} <span style={{ color: "var(--text-3)" }}>({pct}%)</span></span>
                   </div>
-                  <div className="h-3 rounded-full bg-gray-100">
-                    <div className={`h-3 rounded-full ${color}`} style={{ width: `${pct}%` }} />
+                  <div style={{ height: 8, borderRadius: 4, background: "var(--bg-hover)" }}>
+                    <div style={{ height: 8, borderRadius: 4, background: color, width: `${pct}%` }} />
                   </div>
                 </div>
               );
@@ -326,18 +325,15 @@ export default async function AnalyticsPage() {
       {/* Intervention Usage */}
       {activeInterventions.length > 0 && (
         <Section title="Intervention / Treatment Usage">
-          <div className="grid md:grid-cols-2 gap-x-8 gap-y-2 mt-2">
+          <div className="grid md:grid-cols-2" style={{ gap: "8px 32px", marginTop: 8 }}>
             {activeInterventions.map(({ label, count }) => (
               <div key={label}>
-                <div className="flex justify-between text-xs mb-0.5">
-                  <span className="text-gray-700">{label}</span>
-                  <span className="font-semibold text-gray-800">{count}</span>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}>
+                  <span style={{ color: "var(--text-2)" }}>{label}</span>
+                  <span style={{ fontWeight: 600, color: "var(--text)" }}>{count}</span>
                 </div>
-                <div className="h-2 rounded-full bg-gray-100">
-                  <div
-                    className="h-2 rounded-full bg-rose-500"
-                    style={{ width: `${(count / maxIntervention) * 100}%` }}
-                  />
+                <div style={{ height: 6, borderRadius: 3, background: "var(--bg-hover)" }}>
+                  <div style={{ height: 6, borderRadius: 3, background: "#f43f5e", width: `${(count / maxIntervention) * 100}%` }} />
                 </div>
               </div>
             ))}
@@ -348,24 +344,24 @@ export default async function AnalyticsPage() {
       {/* Level Distribution */}
       {Object.keys(levelCount).length > 0 && (
         <Section title="Incident Level Distribution (QM Assigned)">
-          <div className="flex gap-6 mt-3 flex-wrap">
+          <div style={{ display: "flex", gap: 20, marginTop: 12, flexWrap: "wrap" }}>
             {["I", "II", "III", "IV"].map((lvl) =>
               levelCount[lvl] ? (
-                <div key={lvl} className="flex flex-col items-center">
-                  <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center ${levelColors[lvl]}`}>
-                    <span className="text-xl font-bold">{levelCount[lvl]}</span>
+                <div key={lvl} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <div style={{ width: 60, height: 60, borderRadius: "50%", border: `3px solid ${levelColors[lvl].border}`, background: levelColors[lvl].bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: 18, fontWeight: 700, color: levelColors[lvl].text }}>{levelCount[lvl]}</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1 font-medium">Level {lvl}</p>
+                  <p style={{ fontSize: 11, color: "var(--text-2)", marginTop: 5, fontWeight: 500 }}>Level {lvl}</p>
                 </div>
               ) : null
             )}
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 rounded-full border-4 border-gray-300 bg-gray-50 flex items-center justify-center">
-                <span className="text-xl font-bold text-gray-400">
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div style={{ width: 60, height: 60, borderRadius: "50%", border: "3px solid var(--border)", background: "var(--bg-subtle)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: 18, fontWeight: 700, color: "var(--text-3)" }}>
                   {reports.length - Object.values(levelCount).reduce((a, b) => a + b, 0)}
                 </span>
               </div>
-              <p className="text-xs text-gray-400 mt-1">Unassigned</p>
+              <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 5 }}>Unassigned</p>
             </div>
           </div>
         </Section>
@@ -374,16 +370,16 @@ export default async function AnalyticsPage() {
       {/* Reporter Activity + Repeat Patients */}
       <div className="grid md:grid-cols-2 gap-6">
         <Section title="Top Reporters">
-          <div className="space-y-2 mt-2">
-            {topReporters.length === 0 && <p className="text-sm text-gray-400 italic">No data yet.</p>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6 }}>
+            {topReporters.length === 0 && <p style={{ fontSize: 13, color: "var(--text-3)", fontStyle: "italic" }}>No data yet.</p>}
             {topReporters.map(([name, count]) => (
               <div key={name}>
-                <div className="flex justify-between text-xs mb-0.5">
-                  <span className="text-gray-700 truncate max-w-[70%]">{name}</span>
-                  <span className="font-semibold text-gray-800">{count}</span>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}>
+                  <span style={{ color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "70%" }}>{name}</span>
+                  <span style={{ fontWeight: 600, color: "var(--text)" }}>{count}</span>
                 </div>
-                <div className="h-2 rounded-full bg-gray-100">
-                  <div className="h-2 rounded-full bg-cyan-500" style={{ width: `${(count / maxReporter) * 100}%` }} />
+                <div style={{ height: 6, borderRadius: 3, background: "var(--bg-hover)" }}>
+                  <div style={{ height: 6, borderRadius: 3, background: "#06b6d4", width: `${(count / maxReporter) * 100}%` }} />
                 </div>
               </div>
             ))}
@@ -392,22 +388,22 @@ export default async function AnalyticsPage() {
 
         <Section title="Patients with Multiple Incidents">
           {repeatPatients.length === 0 ? (
-            <p className="text-sm text-gray-400 italic mt-2">No patients with repeat incidents.</p>
+            <p style={{ fontSize: 13, color: "var(--text-3)", fontStyle: "italic", marginTop: 8 }}>No patients with repeat incidents.</p>
           ) : (
-            <table className="w-full text-sm mt-2">
-              <thead className="text-xs text-gray-500 border-b border-gray-100">
-                <tr>
-                  <th className="text-left py-1.5 font-medium">Patient</th>
-                  <th className="text-right py-1.5 font-medium">Incidents</th>
-                  <th className="text-right py-1.5 font-medium">Last</th>
+            <table style={{ width: "100%", fontSize: 13, marginTop: 8, borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                  <th style={{ textAlign: "left", padding: "7px 0", fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-3)" }}>Patient</th>
+                  <th style={{ textAlign: "right", padding: "7px 0", fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-3)" }}>Incidents</th>
+                  <th style={{ textAlign: "right", padding: "7px 0", fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-3)" }}>Last</th>
                 </tr>
               </thead>
               <tbody>
                 {repeatPatients.map((p) => (
-                  <tr key={p.name} className="border-b border-gray-50">
-                    <td className="py-1.5 text-gray-800">{p.name}</td>
-                    <td className="py-1.5 text-right font-bold text-red-600">{p.count}</td>
-                    <td className="py-1.5 text-right text-gray-500 text-xs">{format(p.lastDate, "MM/dd/yy")}</td>
+                  <tr key={p.name} style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+                    <td style={{ padding: "8px 0", color: "var(--text)" }}>{p.name}</td>
+                    <td style={{ padding: "8px 0", textAlign: "right", fontWeight: 700, color: "#f43f5e" }}>{p.count}</td>
+                    <td style={{ padding: "8px 0", textAlign: "right", color: "var(--text-2)", fontSize: 12 }}>{format(p.lastDate, "MM/dd/yy")}</td>
                   </tr>
                 ))}
               </tbody>
@@ -435,25 +431,23 @@ export default async function AnalyticsPage() {
 
 function PendingTable({ rows }: { rows: { id: string; incidentDate: Date; unit: string | null; reporterName: string; patient: { fullName: string } }[] }) {
   return (
-    <table className="w-full text-sm mt-2">
-      <thead className="text-xs text-gray-500 border-b border-gray-200">
-        <tr>
-          <th className="text-left py-2 font-medium">Date</th>
-          <th className="text-left py-2 font-medium">Patient</th>
-          <th className="text-left py-2 font-medium">Unit</th>
-          <th className="text-left py-2 font-medium">Reporter</th>
-          <th className="text-left py-2 font-medium" />
+    <table style={{ width: "100%", fontSize: 13, marginTop: 8, borderCollapse: "collapse" }}>
+      <thead>
+        <tr style={{ borderBottom: "1px solid var(--border)" }}>
+          {["Date", "Patient", "Unit", "Reporter", ""].map((h) => (
+            <th key={h} style={{ textAlign: "left", padding: "8px 0", fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-3)" }}>{h}</th>
+          ))}
         </tr>
       </thead>
       <tbody>
         {rows.slice(0, 20).map((r) => (
-          <tr key={r.id} className="border-b border-gray-50 hover:bg-gray-50">
-            <td className="py-2">{format(new Date(r.incidentDate), "MM/dd/yyyy")}</td>
-            <td className="py-2">{r.patient.fullName}</td>
-            <td className="py-2">{r.unit}</td>
-            <td className="py-2">{r.reporterName}</td>
-            <td className="py-2">
-              <Link href={`/dashboard/incidents/${r.id}`} className="text-blue-600 hover:underline text-xs font-medium">
+          <tr key={r.id} style={{ borderBottom: "1px solid var(--border-subtle)" }} className="hover:bg-[var(--bg-hover)]">
+            <td style={{ padding: "9px 0", color: "var(--text-2)" }}>{format(new Date(r.incidentDate), "MM/dd/yyyy")}</td>
+            <td style={{ padding: "9px 0", color: "var(--text)" }}>{r.patient.fullName}</td>
+            <td style={{ padding: "9px 0", color: "var(--text-2)" }}>{r.unit}</td>
+            <td style={{ padding: "9px 0", color: "var(--text-2)" }}>{r.reporterName}</td>
+            <td style={{ padding: "9px 0" }}>
+              <Link href={`/dashboard/incidents/${r.id}`} style={{ fontSize: 12, fontWeight: 500, color: "var(--gold)", textDecoration: "none" }}>
                 Review →
               </Link>
             </td>
@@ -468,39 +462,30 @@ function StatCard({
   label,
   value,
   sub,
-  color,
   pct,
 }: {
   label: string;
   value: number;
   sub: string;
-  color: "blue" | "indigo" | "purple" | "amber" | "green" | "rose";
+  color?: string;
   pct?: boolean;
 }) {
-  const palette: Record<string, string> = {
-    blue: "bg-blue-50 border-blue-200 text-blue-700",
-    indigo: "bg-indigo-50 border-indigo-200 text-indigo-700",
-    purple: "bg-purple-50 border-purple-200 text-purple-700",
-    amber: "bg-amber-50 border-amber-200 text-amber-700",
-    green: "bg-green-50 border-green-200 text-green-700",
-    rose: "bg-rose-50 border-rose-200 text-rose-700",
-  };
   return (
-    <div className={`rounded-xl border p-4 ${palette[color]}`}>
-      <p className="text-xs font-medium opacity-70 uppercase tracking-wide">{label}</p>
-      <p className="text-3xl font-bold mt-1">{value}{pct ? "%" : ""}</p>
-      <p className="text-xs opacity-60 mt-0.5">{sub}</p>
+    <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: 12, padding: "16px 18px" }}>
+      <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", margin: 0 }}>{label}</p>
+      <p style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", margin: "6px 0 0" }}>{value}{pct ? "%" : ""}</p>
+      <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 3 }}>{sub}</p>
     </div>
   );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="bg-gray-50 border-b border-gray-200 px-5 py-3">
-        <h3 className="font-semibold text-gray-800 text-sm uppercase tracking-wide">{title}</h3>
+    <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ background: "var(--bg-subtle)", borderBottom: "1px solid var(--border)", padding: "11px 20px" }}>
+        <h3 style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-2)", margin: 0 }}>{title}</h3>
       </div>
-      <div className="px-5 py-4">{children}</div>
+      <div style={{ padding: "16px 20px" }}>{children}</div>
     </div>
   );
 }

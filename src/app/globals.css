@@ -1,21 +1,74 @@
 @import "tailwindcss";
 
+/* ─── Dark mode via next-themes class strategy ─── */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ─── Light theme ─── */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --bg:             #f9f8f6;
+  --bg-elevated:    #ffffff;
+  --bg-subtle:      #f3f1ed;
+  --bg-hover:       #ece9e2;
+  --border:         #e4dfd6;
+  --border-subtle:  #ede9e1;
+  --text:           #0d0f14;
+  --text-2:         #5c5752;
+  --text-3:         #9c9790;
+  --accent:         #1a2744;
+  --accent-hover:   #0f1830;
+  --accent-fg:      #ffffff;
+  --gold:           #c9a84c;
+  --gold-faint:     rgba(201,168,76,0.10);
+  --danger:         #b91c1c;
+  --danger-bg:      #fef2f2;
+  --danger-border:  #fecaca;
   color-scheme: light;
 }
 
+/* ─── Dark theme ─── */
+.dark {
+  --bg:             #09090d;
+  --bg-elevated:    #0f1117;
+  --bg-subtle:      #13151e;
+  --bg-hover:       #1a1c28;
+  --border:         #1f2232;
+  --border-subtle:  #191b26;
+  --text:           #f0ede8;
+  --text-2:         #8a8680;
+  --text-3:         #45433f;
+  --accent:         #c9a84c;
+  --accent-hover:   #d4b45e;
+  --accent-fg:      #09090d;
+  --gold:           #c9a84c;
+  --gold-faint:     rgba(201,168,76,0.08);
+  --danger:         #f87171;
+  --danger-bg:      #1c0909;
+  --danger-border:  #7f1d1d;
+  color-scheme: dark;
+}
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Smooth theme transitions */
+html {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Input focus ring using accent */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 3px var(--gold-faint);
 }

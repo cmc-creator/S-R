@@ -6,128 +6,195 @@ import { format } from "date-fns";
 export default async function DashboardPage() {
   const session = await auth();
 
-  const [recentPackets, srCount] = await Promise.all([
-    prisma.sRPacket.findMany({
-      take: 10,
-      orderBy: { createdAt: "desc" },
-      include: { patient: true },
-    }),
-    prisma.sRPacket.count(),
-  ]);
+  let recentPackets: Awaited<ReturnType<typeof prisma.sRPacket.findMany<{ include: { patient: true } }>>> = [];
+  let srCount = 0;
+  try {
+    [recentPackets, srCount] = await Promise.all([
+      prisma.sRPacket.findMany({
+        take: 10,
+        orderBy: { createdAt: "desc" },
+        include: { patient: true },
+      }),
+      prisma.sRPacket.count(),
+    ]);
+  } catch {
+    // DB not available locally
+  }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-end justify-between">
+    <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+
+      {/* Page header */}
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.10em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 6 }}>
             {format(new Date(), "EEEE, MMMM d, yyyy")}
           </p>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", margin: 0 }}>
             Welcome back, {session?.user.name?.split(" ")[0]}
           </h1>
         </div>
         <Link
           href="/dashboard/sr-packets/new"
-          className="bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-800 hover:to-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-sm shadow-sm transition"
+          style={{
+            background: "var(--accent)",
+            color: "var(--accent-fg)",
+            fontSize: 13,
+            fontWeight: 600,
+            padding: "9px 16px",
+            borderRadius: 8,
+            textDecoration: "none",
+            letterSpacing: "0.01em",
+            transition: "opacity 0.15s",
+            whiteSpace: "nowrap",
+          }}
         >
           + New S&amp;R Packet
         </Link>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14 }}>
         <StatCard
           label="Total S&R Packets"
           value={srCount}
           icon={
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           }
-          accentClass="bg-blue-50 text-blue-700 border-blue-100"
-          iconClass="bg-blue-100 text-blue-600"
         />
       </div>
 
       {/* Quick actions */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Quick Actions</h2>
-        <div className="grid md:grid-cols-2 gap-4">
-          <Link
+        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.10em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 12 }}>
+          Quick Actions
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
+          <ActionCard
             href="/dashboard/sr-packets/new"
-            className="flex items-center gap-4 bg-white border border-slate-200 rounded-xl p-5 hover:shadow-md hover:border-blue-200 transition group"
-          >
-            <div className="bg-blue-50 group-hover:bg-blue-100 text-blue-600 rounded-xl p-3 transition">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            title="New S&R Packet"
+            description="Start a new Seclusion/Restraint documentation"
+            icon={
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
-            </div>
-            <div>
-              <p className="font-semibold text-slate-900 group-hover:text-blue-700 transition">New S&amp;R Packet</p>
-              <p className="text-sm text-slate-500 mt-0.5">Start a new Seclusion/Restraint documentation</p>
-            </div>
-            <svg className="w-4 h-4 text-slate-300 group-hover:text-blue-400 ml-auto transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-          <Link
+            }
+          />
+          <ActionCard
             href="/dashboard/sr-packets"
-            className="flex items-center gap-4 bg-white border border-slate-200 rounded-xl p-5 hover:shadow-md hover:border-blue-200 transition group"
-          >
-            <div className="bg-slate-50 group-hover:bg-slate-100 text-slate-600 rounded-xl p-3 transition">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            title="View All Packets"
+            description="Browse and manage existing S&R records"
+            icon={
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
               </svg>
-            </div>
-            <div>
-              <p className="font-semibold text-slate-900 group-hover:text-blue-700 transition">View All Packets</p>
-              <p className="text-sm text-slate-500 mt-0.5">Browse and manage existing S&amp;R records</p>
-            </div>
-            <svg className="w-4 h-4 text-slate-300 group-hover:text-blue-400 ml-auto transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
+            }
+          />
         </div>
       </div>
 
-      {/* Recent Records */}
+      {/* Recent packets */}
       <div>
-        <section className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/60">
-            <h2 className="font-semibold text-slate-800">Recent S&amp;R Packets</h2>
-            <Link href="/dashboard/sr-packets" className="text-xs font-medium text-blue-600 hover:text-blue-800 transition">
+        <div
+          style={{
+            background: "var(--bg-elevated)",
+            border: "1px solid var(--border)",
+            borderRadius: 12,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "14px 20px",
+              borderBottom: "1px solid var(--border)",
+              background: "var(--bg-subtle)",
+            }}
+          >
+            <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: 0 }}>
+              Recent S&amp;R Packets
+            </p>
+            <Link
+              href="/dashboard/sr-packets"
+              style={{ fontSize: 12, fontWeight: 500, color: "var(--gold)", textDecoration: "none" }}
+            >
               View all →
             </Link>
           </div>
+
           {recentPackets.length === 0 ? (
-            <div className="flex flex-col items-center py-12 text-slate-400">
-              <svg className="w-10 h-10 mb-3 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div style={{ textAlign: "center", padding: "56px 20px" }}>
+              <svg
+                width="36"
+                height="36"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                style={{ color: "var(--text-3)", margin: "0 auto 12px" }}
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <p className="text-sm">No S&amp;R packets yet.</p>
-              <Link href="/dashboard/sr-packets/new" className="text-blue-600 hover:underline text-sm mt-1">
+              <p style={{ fontSize: 14, color: "var(--text-2)", marginBottom: 8 }}>No S&amp;R packets yet</p>
+              <Link
+                href="/dashboard/sr-packets/new"
+                style={{ fontSize: 13, color: "var(--gold)", textDecoration: "none" }}
+              >
                 Create your first packet →
               </Link>
             </div>
           ) : (
-            <ul className="divide-y divide-slate-100">
-              {recentPackets.map((p) => (
-                <li key={p.id}>
+            <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+              {recentPackets.map((p, i) => (
+                <li
+                  key={p.id}
+                  style={{ borderBottom: i < recentPackets.length - 1 ? "1px solid var(--border-subtle)" : "none" }}
+                >
                   <Link
                     href={`/dashboard/sr-packets/${p.id}`}
-                    className="flex items-center justify-between px-5 py-3.5 hover:bg-blue-50/40 transition group"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "13px 20px",
+                      textDecoration: "none",
+                      transition: "background 0.12s",
+                    }}
+                    className="hover:bg-[var(--bg-hover)]"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center shrink-0">
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: "50%",
+                          background: "var(--gold-faint)",
+                          border: "1px solid var(--border)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "var(--gold)",
+                          flexShrink: 0,
+                        }}
+                      >
                         {p.patient.fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-700 transition">{p.patient.fullName}</p>
-                        <p className="text-xs text-slate-400">MRN {p.patient.mrn}</p>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: 0 }}>
+                          {p.patient.fullName}
+                        </p>
+                        <p style={{ fontSize: 11, color: "var(--text-3)", margin: "2px 0 0" }}>
+                          MRN {p.patient.mrn}
+                        </p>
                       </div>
                     </div>
-                    <span className="text-xs text-slate-400 font-medium">
+                    <span style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 500 }}>
                       {format(new Date(p.createdAt), "MMM d, yyyy")}
                     </span>
                   </Link>
@@ -135,30 +202,96 @@ export default async function DashboardPage() {
               ))}
             </ul>
           )}
-        </section>
+        </div>
       </div>
     </div>
   );
 }
 
-function StatCard({
-  label, value, icon, accentClass, iconClass,
-}: {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  accentClass: string;
-  iconClass: string;
-}) {
+function StatCard({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
   return (
-    <div className={`rounded-xl border p-5 ${accentClass} flex items-start justify-between`}>
+    <div
+      style={{
+        background: "var(--bg-elevated)",
+        border: "1px solid var(--border)",
+        borderRadius: 12,
+        padding: "20px 20px 18px",
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "space-between",
+      }}
+    >
       <div>
-        <p className="text-3xl font-bold">{value}</p>
-        <p className="text-sm font-medium mt-1 opacity-75">{label}</p>
+        <p style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", margin: 0 }}>
+          {value}
+        </p>
+        <p style={{ fontSize: 12, fontWeight: 500, color: "var(--text-2)", marginTop: 4, lineHeight: 1.3 }}>
+          {label}
+        </p>
       </div>
-      <div className={`rounded-lg p-2.5 ${iconClass}`}>
+      <div
+        style={{
+          background: "var(--gold-faint)",
+          border: "1px solid var(--border)",
+          borderRadius: 8,
+          padding: 8,
+          color: "var(--gold)",
+        }}
+      >
         {icon}
       </div>
     </div>
   );
 }
+
+function ActionCard({
+  href,
+  title,
+  description,
+  icon,
+}: {
+  href: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+        background: "var(--bg-elevated)",
+        border: "1px solid var(--border)",
+        borderRadius: 12,
+        padding: "18px 20px",
+        textDecoration: "none",
+        transition: "border-color 0.15s, background 0.15s",
+      }}
+      className="hover:border-[var(--gold)] hover:bg-[var(--bg-subtle)]"
+    >
+      <div
+        style={{
+          background: "var(--bg-subtle)",
+          border: "1px solid var(--border)",
+          borderRadius: 10,
+          padding: 10,
+          color: "var(--text-2)",
+          flexShrink: 0,
+          transition: "background 0.15s, color 0.15s",
+        }}
+      >
+        {icon}
+      </div>
+      <div style={{ flex: 1 }}>
+        <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", margin: 0 }}>{title}</p>
+        <p style={{ fontSize: 12, color: "var(--text-2)", marginTop: 3 }}>{description}</p>
+      </div>
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: "var(--text-3)", flexShrink: 0 }}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+      </svg>
+    </Link>
+  );
+}
+

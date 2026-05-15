@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,11 +15,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    const result = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
     if (result?.error) {
       setError("Invalid email or password.");
@@ -28,82 +25,252 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-blue-900 relative overflow-hidden">
-      {/* Subtle background circles */}
-      <div className="absolute top-[-15%] right-[-10%] w-96 h-96 rounded-full bg-blue-700 opacity-10 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-8%] w-80 h-80 rounded-full bg-indigo-600 opacity-10 blur-3xl pointer-events-none" />
-
-      <div className="relative w-full max-w-sm mx-4">
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          {/* Top accent */}
-          <div className="h-1.5 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500" />
-
-          <div className="px-8 pt-8 pb-9">
-            {/* Brand */}
-            <div className="flex flex-col items-center mb-8">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-700 to-blue-900 flex items-center justify-center mb-4 shadow-lg">
-                <span className="text-white font-bold text-xl tracking-tight">DS</span>
-              </div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Destiny Springs</h1>
-              <p className="text-slate-500 text-sm mt-1">Seclusion &amp; Restraint Documentation</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email</label>
-                <input
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  placeholder="you@destinysprings.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
-                <input
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
-              </div>
-
-              {error && (
-                <div className="flex items-start gap-2 text-red-700 bg-red-50 border border-red-200 rounded-lg px-3.5 py-2.5 text-sm">
-                  <span className="mt-0.5 shrink-0">⚠</span>
-                  <span>{error}</span>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full mt-1 bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-800 hover:to-blue-700 text-white font-semibold py-2.5 rounded-lg transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Signing in…
-                  </span>
-                ) : "Sign In →"}
-              </button>
-            </form>
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: "var(--bg)", color: "var(--text)" }}
+    >
+      {/* Top bar */}
+      <header className="flex items-center justify-between px-6 py-4 md:px-10">
+        <div className="flex items-center gap-2.5">
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 7,
+              background: "var(--accent)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <span
+              style={{
+                color: "var(--accent-fg)",
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: "0.05em",
+              }}
+            >
+              DS
+            </span>
           </div>
+          <span style={{ color: "var(--text)", fontWeight: 600, fontSize: 14, letterSpacing: "-0.01em" }}>
+            Destiny Springs
+          </span>
         </div>
+        <ThemeToggle />
+      </header>
 
-        <p className="text-center text-blue-300/60 text-xs mt-5">
-          Destiny Springs Behavioral Health &copy; {new Date().getFullYear()}
-        </p>
-      </div>
+      {/* Main */}
+      <main className="flex-1 flex items-center justify-center px-4 pb-20">
+        <div style={{ width: "100%", maxWidth: 360 }}>
+
+          {/* Brand mark */}
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 14,
+                background: "var(--accent)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 20px",
+                boxShadow: "0 8px 32px var(--gold-faint)",
+              }}
+            >
+              <span style={{ color: "var(--accent-fg)", fontSize: 18, fontWeight: 700, letterSpacing: "0.02em" }}>
+                DS
+              </span>
+            </div>
+            <p
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: "0.14em",
+                color: "var(--gold)",
+                textTransform: "uppercase",
+                marginBottom: 10,
+              }}
+            >
+              Seclusion &amp; Restraint Platform
+            </p>
+            <h1
+              style={{
+                fontSize: 28,
+                fontWeight: 700,
+                letterSpacing: "-0.025em",
+                color: "var(--text)",
+                margin: 0,
+              }}
+            >
+              Sign in
+            </h1>
+            <p style={{ fontSize: 14, color: "var(--text-2)", marginTop: 6 }}>
+              Access your documentation portal
+            </p>
+          </div>
+
+          {/* Form card */}
+          <div
+            style={{
+              background: "var(--bg-elevated)",
+              border: "1px solid var(--border)",
+              borderRadius: 12,
+              overflow: "hidden",
+            }}
+          >
+            {/* Gold accent line */}
+            <div
+              style={{
+                height: 1,
+                background: "linear-gradient(90deg, transparent 0%, var(--gold) 40%, var(--gold) 60%, transparent 100%)",
+              }}
+            />
+
+            <div style={{ padding: "28px 28px 32px" }}>
+              <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: 18 }}>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      color: "var(--text-2)",
+                      marginBottom: 8,
+                    }}
+                  >
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@destinysprings.com"
+                    style={{
+                      width: "100%",
+                      background: "var(--bg-subtle)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 8,
+                      padding: "10px 14px",
+                      fontSize: 14,
+                      color: "var(--text)",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: 22 }}>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      color: "var(--text-2)",
+                      marginBottom: 8,
+                    }}
+                  >
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    style={{
+                      width: "100%",
+                      background: "var(--bg-subtle)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 8,
+                      padding: "10px 14px",
+                      fontSize: 14,
+                      color: "var(--text)",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                {error && (
+                  <div
+                    style={{
+                      background: "var(--danger-bg)",
+                      border: "1px solid var(--danger-border)",
+                      color: "var(--danger)",
+                      borderRadius: 8,
+                      padding: "10px 14px",
+                      fontSize: 13,
+                      marginBottom: 16,
+                    }}
+                  >
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    width: "100%",
+                    background: "var(--accent)",
+                    color: "var(--accent-fg)",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "12px 20px",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    letterSpacing: "0.01em",
+                    cursor: loading ? "not-allowed" : "pointer",
+                    opacity: loading ? 0.65 : 1,
+                    transition: "opacity 0.15s, background 0.15s",
+                  }}
+                >
+                  {loading ? (
+                    <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                      <svg
+                        style={{ animation: "spin 0.9s linear infinite" }}
+                        width="15"
+                        height="15"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.25" />
+                        <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                      </svg>
+                      Signing in…
+                    </span>
+                  ) : (
+                    "Sign in →"
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <p
+            style={{
+              textAlign: "center",
+              fontSize: 11,
+              color: "var(--text-3)",
+              marginTop: 20,
+              letterSpacing: "0.02em",
+            }}
+          >
+            Destiny Springs Behavioral Health &copy; {new Date().getFullYear()}
+          </p>
+        </div>
+      </main>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }
