@@ -2,14 +2,18 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Run Vesper Backend",
-      "type": "python",
+      "name": "Next.js Dev Server",
+      "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/vesper-web/backend/main.py",
+      "program": "${workspaceFolder}/node_modules/.bin/next",
+      "args": ["dev"],
+      "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "env": {"PYTHONPATH": "${workspaceFolder}/vesper-web/backend"},
-      "args": ["-m", "uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"],
-      "justMyCode": true
+      "serverReadyAction": {
+        "pattern": "ready started server on",
+        "uriFormat": "http://localhost:3000",
+        "action": "openExternally"
+      }
     }
   ]
 }

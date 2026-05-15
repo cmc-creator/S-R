@@ -1,10 +1,8 @@
-- [ ] Clarify Project Requirements
-- [ ] Scaffold the Project
-- [ ] Customize the Project
-- [ ] Install Required Extensions
-- [ ] Compile the Project
-- [ ] Create and Run Task
-- [ ] Launch the Project
-- [ ] Ensure Documentation is Complete
+# Destiny Springs S&R Packet Builder
 
-This file tracks the setup and progress for the Vesper web app transformation. Each step will be checked off and summarized as completed.
+This is the Seclusion & Restraint documentation platform for Destiny Springs Behavioral Health.
+
+- Next.js 15 App Router, TypeScript, Tailwind CSS v4
+- Prisma 7 + PostgreSQL (Prisma Postgres)
+- NextAuth.js v5 beta (Credentials provider)
+- Deployed at https://s-r-pi.vercel.app
