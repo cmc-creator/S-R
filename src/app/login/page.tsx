@@ -224,7 +224,10 @@ export default function LoginPage() {
               letterSpacing: "0.02em",
             }}
           >
-            SR Suite &copy; {new Date().getFullYear()} &mdash; Built for behavioral health
+            &copy; {new Date().getFullYear()} NyxCollective LLC &mdash; SR Suite&#8482;&ensp;&middot;&ensp;
+            <a href="/terms" style={{ color: "inherit", textDecoration: "underline" }}>Terms</a>
+            &ensp;&middot;&ensp;
+            <a href="/privacy" style={{ color: "inherit", textDecoration: "underline" }}>Privacy</a>
           </p>
         </div>
       </main>

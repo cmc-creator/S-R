@@ -43,6 +43,18 @@ async function main() {
   });
 
   console.log("✓ Demo nurse: demo.nurse@destinysprings.com (password: Staff1234!)");
+
+  const patient = await prisma.patient.upsert({
+    where: { mrn: "TEST-001" },
+    update: {},
+    create: {
+      fullName: "Alex Rivera",
+      dob: new Date("1992-04-22"),
+      mrn: "TEST-001",
+    },
+  });
+
+  console.log(`✓ Test patient: ${patient.fullName} (MRN: ${patient.mrn})`);
   console.log("\nSeed complete.");
   console.log("\nLogin credentials:");
   console.log("  Admin: admin@destinysprings.com / Admin1234!");
