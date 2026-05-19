@@ -200,9 +200,9 @@ export default function TermsPage() {
 
         <LegalSection title="11. Governing Law &amp; Dispute Resolution">
           <p>
-            These Terms shall be governed by and construed in accordance with the laws of the State of Florida,
+            These Terms shall be governed by and construed in accordance with the laws of the State of Arizona,
             without regard to its conflict of law principles. Any dispute arising under or in connection with
-            these Terms shall be resolved exclusively in the state or federal courts located in Florida, and
+            these Terms shall be resolved exclusively in the state or federal courts located in Arizona, and
             each party consents to the personal jurisdiction of such courts.
           </p>
           <p>
