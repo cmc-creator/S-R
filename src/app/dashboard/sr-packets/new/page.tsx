@@ -25,6 +25,7 @@ function NewSRPacketContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
+  const [maxStep, setMaxStep] = useState(0);
   const [packetId, setPacketId] = useState<string | null>(null);
   const [patientId, setPatientId] = useState(searchParams.get("patientId") ?? "");
   const incidentId = searchParams.get("incidentId");
@@ -44,10 +45,15 @@ function NewSRPacketContent() {
     const packet = await res.json();
     setPacketId(packet.id);
     setStep(1);
+    setMaxStep(1);
     setCreating(false);
   }
 
-  function next() { setStep((s) => Math.min(s + 1, STEPS.length - 1)); }
+  function next() {
+    const nextStep = Math.min(step + 1, STEPS.length - 1);
+    setMaxStep((m) => Math.max(m, nextStep));
+    setStep(nextStep);
+  }
   function prev() { setStep((s) => Math.max(s - 1, 0)); }
   function finish() { router.push(`/dashboard/sr-packets/${packetId}`); }
 
@@ -60,12 +66,16 @@ function NewSRPacketContent() {
 
       {/* Stepper */}
       <div style={{ display: "flex", overflowX: "auto", gap: 6, marginBottom: 32, paddingBottom: 8 }}>
-        {STEPS.map((s, i) => (
+        {STEPS.map((s, i) => {
+          const isActive = i === step;
+          const isDone = i < step && i <= maxStep;
+          const isReachable = i <= maxStep;
+          return (
           <button
             key={s}
             type="button"
-            disabled={packetId === null && i > 0}
-            onClick={() => packetId && setStep(i)}
+            disabled={!isReachable}
+            onClick={() => isReachable && setStep(i)}
             style={{
               flexShrink: 0,
               padding: "6px 12px",
@@ -73,24 +83,27 @@ function NewSRPacketContent() {
               fontSize: "0.75rem",
               fontWeight: 500,
               border: "none",
-              cursor: packetId || i === 0 ? "pointer" : "default",
-              opacity: packetId === null && i > 0 ? 0.4 : 1,
+              cursor: isReachable ? "pointer" : "default",
+              opacity: isReachable ? 1 : 0.35,
               transition: "all 0.15s",
-              background: i === step
+              background: isActive
                 ? "var(--accent)"
-                : i < step
-                ? "rgba(16,185,129,0.12)"
+                : isDone
+                ? "rgba(16,185,129,0.15)"
                 : "var(--bg-subtle)",
-              color: i === step
+              color: isActive
                 ? "var(--accent-fg)"
-                : i < step
+                : isDone
                 ? "#34d399"
                 : "var(--text-3)",
+              outline: isActive ? "2px solid var(--accent)" : isDone ? "1px solid rgba(52,211,153,0.4)" : "none",
+              outlineOffset: 2,
             }}
           >
-            {i + 1}. {s}
+            {isDone ? `✓ ${s}` : `${i + 1}. ${s}`}
           </button>
-        ))}
+          );
+        })}
       </div>
 
       {/* Step content */}

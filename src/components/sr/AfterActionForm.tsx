@@ -1,7 +1,7 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import { SRSection, SRField, inp, btnPrimary, btnSecondary } from "./PhysicianOrderForm";
+import { SRSection, SRField, inp, inpError, btnPrimary, btnSecondary } from "./PhysicianOrderForm";
 
 const CHECKLIST_ITEMS: { num: number; text: string }[] = [
   { num: 1, text: "Patient was an immediate risk to physical safety of self or others" },
@@ -43,7 +43,7 @@ export default function AfterActionForm({ srPacketId, onNext, onBack }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const { register, handleSubmit } = useForm<FormValues>({
+  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
       checklist: CHECKLIST_ITEMS.map(() => ({ answer: "", comments: "" })),
     },
@@ -51,8 +51,6 @@ export default function AfterActionForm({ srPacketId, onNext, onBack }: Props) {
 
   async function onSubmit(data: FormValues) {
     const missing: string[] = [];
-    if (!data.completedByName?.trim()) missing.push("Completed by name");
-    if (!data.completedByDate) missing.push("Completed by date");
     const unanswered = data.checklist?.filter((c) => !c.answer);
     if (unanswered?.length > 0) missing.push(`All 21 checklist items must be answered (${unanswered.length} unanswered)`);
     if (missing.length > 0) { setError("Please complete required fields:\n• " + missing.join("\n• ")); return; }
@@ -128,8 +126,8 @@ export default function AfterActionForm({ srPacketId, onNext, onBack }: Props) {
         <div className="grid md:grid-cols-2 gap-6 border-t border-gray-100 pt-4">
           <div className="space-y-3">
             <p className="text-xs font-bold text-gray-700 uppercase tracking-widest">Completed By</p>
-            <SRField label="Print Name"><input {...register("completedByName")} className={inp} /></SRField>
-            <SRField label="Date"><input type="date" {...register("completedByDate")} className={inp} /></SRField>
+            <SRField label="Print Name" error={errors.completedByName?.message}><input {...register("completedByName", { required: "Required" })} className={errors.completedByName ? inpError : inp} /></SRField>
+            <SRField label="Date" error={errors.completedByDate?.message}><input type="date" {...register("completedByDate", { required: "Required" })} className={errors.completedByDate ? inpError : inp} /></SRField>
           </div>
           <div className="space-y-3">
             <p className="text-xs font-bold text-gray-700 uppercase tracking-widest">Reviewed By QM/Risk Management</p>

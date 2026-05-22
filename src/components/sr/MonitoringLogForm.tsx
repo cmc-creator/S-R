@@ -1,7 +1,7 @@
 "use client";
 import { useForm, useFieldArray } from "react-hook-form";
 import { useState } from "react";
-import { SRSection, SRField, inp, btnPrimary, btnSecondary } from "./PhysicianOrderForm";
+import { SRSection, SRField, inp, inpError, btnPrimary, btnSecondary } from "./PhysicianOrderForm";
 
 const BEHAVIORS: { code: string; label: string }[] = [
   { code: "A", label: "A. Hitting door" },
@@ -59,7 +59,7 @@ export default function MonitoringLogForm({ srPacketId, onNext, onBack }: Props)
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const { register, handleSubmit, control, watch } = useForm<FormValues>({
+  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
       entries: Array.from({ length: 12 }, () => ({ militaryTime: "", behaviorCode: "", interventionCode: "", staffInitials: "" })),
       staffSignatures: [{ name: "", position: "", initials: "" }, { name: "", position: "", initials: "" }],
@@ -71,8 +71,7 @@ export default function MonitoringLogForm({ srPacketId, onNext, onBack }: Props)
 
   async function onSubmit(data: FormValues) {
     const missing: string[] = [];
-    if (!data.logDate) missing.push("Log date");
-    if (!data.notApplicable && !data.entries.some((e) => e.militaryTime?.trim())) missing.push("At least one monitoring log entry");
+    if (!data.notApplicable && !data.entries.some((e) => e.militaryTime?.trim())) missing.push("At least one monitoring log entry with a time");
     if (missing.length > 0) { setError("Please complete required fields:\n• " + missing.join("\n• ")); return; }
     setSaving(true);
     setError("");
@@ -105,7 +104,7 @@ export default function MonitoringLogForm({ srPacketId, onNext, onBack }: Props)
         </label>
 
         <div className="grid md:grid-cols-2 gap-4">
-          <SRField label="Date"><input type="date" {...register("logDate", { required: true })} className={inp} /></SRField>
+          <SRField label="Date" error={errors.logDate?.message}><input type="date" {...register("logDate", { required: "Required" })} className={errors.logDate ? inpError : inp} /></SRField>
           <SRField label="Location(s)"><input {...register("location")} className={inp} /></SRField>
         </div>
 

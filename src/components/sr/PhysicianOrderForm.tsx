@@ -58,7 +58,7 @@ export default function PhysicianOrderForm({ srPacketId, onNext, onBack }: Props
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const { register, handleSubmit, watch, setValue } = useForm<FormValues>({
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
       chemMedications: [{ date: "", time: "", medication: "", dosage: "", route: "IM" }],
       lessRestrictiveMeans: [],
@@ -81,20 +81,8 @@ export default function PhysicianOrderForm({ srPacketId, onNext, onBack }: Props
   }
 
   async function onSubmit(data: FormValues) {
-    // Required field validation
-    const missing: string[] = [];
     if (!data.isPhysicalRestraint && !data.isSeclusion && !data.isChemicalRestraint) {
-      missing.push("Type of intervention must be selected (Physical Restraint, Seclusion, or Chemical Restraint)");
-    }
-    if (!data.reasonDescription?.trim()) missing.push("Reason for intervention description");
-    if (!data.nurseName?.trim()) missing.push("Nurse name");
-    if (!data.nurseDate) missing.push("Nurse date");
-    if (!data.nurseTime) missing.push("Nurse time");
-    if (!data.physicianName?.trim()) missing.push("Physician name");
-    if (!data.physicianDate) missing.push("Physician date");
-    if (!data.physicianTime) missing.push("Physician time");
-    if (missing.length > 0) {
-      setError("Please complete required fields:\n• " + missing.join("\n• "));
+      setError("Select at least one intervention type (Physical Restraint, Seclusion, or Chemical Restraint).");
       return;
     }
     setSaving(true);
@@ -221,9 +209,9 @@ export default function PhysicianOrderForm({ srPacketId, onNext, onBack }: Props
             <label className="flex items-center gap-2"><input type="checkbox" {...register("reasonDTS")} className="accent-blue-700" /> DTS</label>
           </div>
           <textarea
-            {...register("reasonDescription")}
+            {...register("reasonDescription", { required: "Required" })}
             rows={3}
-            className={`${inp} resize-y`}
+            className={`${errors.reasonDescription ? inpError : inp} resize-y`}
             placeholder="Describe facts/behaviors justifying the use of restraint or seclusion. Be descriptive (e.g., 'hitting and kicking staff')…"
           />
         </div>
@@ -294,18 +282,18 @@ export default function PhysicianOrderForm({ srPacketId, onNext, onBack }: Props
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <p className="text-xs font-bold text-gray-700 uppercase tracking-widest">Nurse</p>
-              <SRField label="Name"><input {...register("nurseName")} className={inp} /></SRField>
+              <SRField label="Name" error={errors.nurseName?.message}><input {...register("nurseName", { required: "Required" })} className={errors.nurseName ? inpError : inp} /></SRField>
               <div className="grid grid-cols-2 gap-2">
-                <SRField label="Date"><input type="date" {...register("nurseDate")} className={inp} /></SRField>
-                <SRField label="Time"><input type="time" {...register("nurseTime")} className={inp} /></SRField>
+                <SRField label="Date" error={errors.nurseDate?.message}><input type="date" {...register("nurseDate", { required: "Required" })} className={errors.nurseDate ? inpError : inp} /></SRField>
+                <SRField label="Time" error={errors.nurseTime?.message}><input type="time" {...register("nurseTime", { required: "Required" })} className={errors.nurseTime ? inpError : inp} /></SRField>
               </div>
             </div>
             <div className="space-y-2">
               <p className="text-xs font-bold text-gray-700 uppercase tracking-widest">Physician</p>
-              <SRField label="Name"><input {...register("physicianName")} className={inp} /></SRField>
+              <SRField label="Name" error={errors.physicianName?.message}><input {...register("physicianName", { required: "Required" })} className={errors.physicianName ? inpError : inp} /></SRField>
               <div className="grid grid-cols-2 gap-2">
-                <SRField label="Date"><input type="date" {...register("physicianDate")} className={inp} /></SRField>
-                <SRField label="Time"><input type="time" {...register("physicianTime")} className={inp} /></SRField>
+                <SRField label="Date" error={errors.physicianDate?.message}><input type="date" {...register("physicianDate", { required: "Required" })} className={errors.physicianDate ? inpError : inp} /></SRField>
+                <SRField label="Time" error={errors.physicianTime?.message}><input type="time" {...register("physicianTime", { required: "Required" })} className={errors.physicianTime ? inpError : inp} /></SRField>
               </div>
             </div>
           </div>
@@ -333,15 +321,20 @@ export function SRSection({ title, children }: { title: string; children: React.
   );
 }
 
-export function SRField({ label, children }: { label: string; children: React.ReactNode }) {
+export function SRField({ label, children, error }: { label: string; children: React.ReactNode; error?: string }) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-slate-700 mb-1.5">{label}</label>
+      <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+        {label}
+        {error && <span className="text-red-500 font-normal ml-1 text-xs">*</span>}
+      </label>
       {children}
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   );
 }
 
 export const inp = "w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 bg-white focus:outline-none transition placeholder:text-slate-400";
+export const inpError = "w-full border-2 border-red-400 bg-red-50 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-300 transition placeholder:text-slate-400";
 export const btnPrimary = "bg-[var(--accent)] text-[var(--accent-fg)] font-semibold px-6 py-2.5 rounded-lg transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed";
 export const btnSecondary = "border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium px-6 py-2.5 rounded-lg transition";

@@ -1,7 +1,7 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import { SRSection, SRField, inp, btnPrimary, btnSecondary } from "./PhysicianOrderForm";
+import { SRSection, SRField, inp, inpError, btnPrimary, btnSecondary } from "./PhysicianOrderForm";
 
 const CPI_QUESTIONS: { num: number; text: string }[] = [
   { num: 7, text: "Were other patients removed from the area?" },
@@ -37,7 +37,7 @@ export default function StaffDebriefingForm({ srPacketId, onNext, onBack }: Prop
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const { register, handleSubmit } = useForm<FormValues>({
+  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
       staffRows: [
         { name: "", credentials: "" }, // LEADER
@@ -53,9 +53,6 @@ export default function StaffDebriefingForm({ srPacketId, onNext, onBack }: Prop
 
   async function onSubmit(data: FormValues) {
     const missing: string[] = [];
-    if (!data.debriefDate) missing.push("Debrief date");
-    if (!data.debriefTime) missing.push("Debrief time");
-    if (!data.staffRows?.[0]?.name?.trim()) missing.push("Team leader name (Staff row 1)");
     if (missing.length > 0) { setError("Please complete required fields:\n• " + missing.join("\n• ")); return; }
     setSaving(true);
     setError("");
@@ -88,8 +85,8 @@ export default function StaffDebriefingForm({ srPacketId, onNext, onBack }: Prop
         </p>
 
         <div className="grid md:grid-cols-2 gap-4">
-          <SRField label="Date"><input type="date" {...register("debriefDate", { required: true })} className={inp} /></SRField>
-          <SRField label="Time"><input type="time" {...register("debriefTime")} className={inp} /></SRField>
+          <SRField label="Date" error={errors.debriefDate?.message}><input type="date" {...register("debriefDate", { required: "Required" })} className={errors.debriefDate ? inpError : inp} /></SRField>
+          <SRField label="Time" error={errors.debriefTime?.message}><input type="time" {...register("debriefTime", { required: "Required" })} className={errors.debriefTime ? inpError : inp} /></SRField>
         </div>
 
         {/* Staff Table */}
@@ -98,7 +95,9 @@ export default function StaffDebriefingForm({ srPacketId, onNext, onBack }: Prop
           <div className="space-y-2">
             {staffLabels.map((label, i) => (
               <div key={i} className="grid grid-cols-2 gap-3">
-                <SRField label={label}><input {...register(`staffRows.${i}.name` as const)} placeholder="Name" className={inp} /></SRField>
+                <SRField label={label} error={i === 0 ? errors.staffRows?.[0]?.name?.message : undefined}>
+                  <input {...register(`staffRows.${i}.name` as const, i === 0 ? { required: "Team leader required" } : {})} placeholder="Name" className={i === 0 && errors.staffRows?.[0]?.name ? inpError : inp} />
+                </SRField>
                 <SRField label="Credentials"><input {...register(`staffRows.${i}.credentials` as const)} className={inp} /></SRField>
               </div>
             ))}

@@ -1,7 +1,7 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import { SRSection, SRField, inp, btnPrimary, btnSecondary } from "./PhysicianOrderForm";
+import { SRSection, SRField, inp, inpError, btnPrimary, btnSecondary } from "./PhysicianOrderForm";
 
 type FormValues = {
   physRestTimeIn: string;
@@ -33,14 +33,10 @@ export default function TerminationForm({ srPacketId, onNext, onBack }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const { register, handleSubmit, watch } = useForm<FormValues>();
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormValues>();
 
   async function onSubmit(data: FormValues) {
     const missing: string[] = [];
-    if (!data.totalMinutes?.trim()) missing.push("Total minutes");
-    if (!data.rnName?.trim()) missing.push("RN name");
-    if (!data.rnDate) missing.push("RN date");
-    if (!data.rnTime) missing.push("RN time");
     if (missing.length > 0) { setError("Please complete required fields:\n• " + missing.join("\n• ")); return; }
     setSaving(true);
     setError("");
@@ -96,8 +92,8 @@ export default function TerminationForm({ srPacketId, onNext, onBack }: Props) {
             </div>
           </div>
 
-          <SRField label="Total time in minutes">
-            <input type="number" {...register("totalMinutes")} className={inp} />
+          <SRField label="Total time in minutes" error={errors.totalMinutes?.message}>
+            <input type="number" {...register("totalMinutes", { required: "Required" })} className={errors.totalMinutes ? inpError : inp} />
           </SRField>
         </div>
 
@@ -151,9 +147,9 @@ export default function TerminationForm({ srPacketId, onNext, onBack }: Props) {
         {/* RN Signature */}
         <div className="border-t border-gray-100 pt-4">
           <div className="grid md:grid-cols-3 gap-4">
-            <SRField label="RN Name (Print)"><input {...register("rnName")} className={inp} /></SRField>
-            <SRField label="Date"><input type="date" {...register("rnDate")} className={inp} /></SRField>
-            <SRField label="Time"><input type="time" {...register("rnTime")} className={inp} /></SRField>
+            <SRField label="RN Name (Print)" error={errors.rnName?.message}><input {...register("rnName", { required: "Required" })} className={errors.rnName ? inpError : inp} /></SRField>
+            <SRField label="Date" error={errors.rnDate?.message}><input type="date" {...register("rnDate", { required: "Required" })} className={errors.rnDate ? inpError : inp} /></SRField>
+            <SRField label="Time" error={errors.rnTime?.message}><input type="time" {...register("rnTime", { required: "Required" })} className={errors.rnTime ? inpError : inp} /></SRField>
           </div>
         </div>
       </SRSection>

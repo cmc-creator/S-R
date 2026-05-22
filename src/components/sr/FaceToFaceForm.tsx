@@ -1,7 +1,7 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import { SRSection, SRField, inp, btnPrimary, btnSecondary } from "./PhysicianOrderForm";
+import { SRSection, SRField, inp, inpError, btnPrimary, btnSecondary } from "./PhysicianOrderForm";
 
 const MOODS = ["Euthymic", "Depressed", "Euphoric", "Anxious", "Angry", "Irritable", "Other"];
 const AFFECTS = ["Appropriate", "Inappropriate", "Labile", "Elated", "Constricted", "Blunted", "Expansive", "Other"];
@@ -71,7 +71,7 @@ export default function FaceToFaceForm({ srPacketId, onNext, onBack }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const { register, handleSubmit, watch, setValue } = useForm<FormValues>({
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormValues>({
     defaultValues: { mood: [], affect: [], discontinueCriteria: [] },
   });
 
@@ -86,9 +86,6 @@ export default function FaceToFaceForm({ srPacketId, onNext, onBack }: Props) {
 
   async function onSubmit(data: FormValues) {
     const missing: string[] = [];
-    if (!data.evalDate) missing.push("Evaluation date");
-    if (!data.evalTime) missing.push("Evaluation time");
-    if (!data.practitionerName?.trim()) missing.push("Practitioner name");
     if (missing.length > 0) { setError("Please complete required fields:\n• " + missing.join("\n• ")); return; }
     setSaving(true);
     setError("");
@@ -130,8 +127,8 @@ export default function FaceToFaceForm({ srPacketId, onNext, onBack }: Props) {
         </p>
 
         <div className="grid md:grid-cols-2 gap-4">
-          <SRField label="Date"><input type="date" {...register("evalDate", { required: true })} className={inp} /></SRField>
-          <SRField label="Time"><input type="time" {...register("evalTime", { required: true })} className={inp} /></SRField>
+          <SRField label="Date" error={errors.evalDate?.message}><input type="date" {...register("evalDate", { required: "Required" })} className={errors.evalDate ? inpError : inp} /></SRField>
+          <SRField label="Time" error={errors.evalTime?.message}><input type="time" {...register("evalTime", { required: "Required" })} className={errors.evalTime ? inpError : inp} /></SRField>
         </div>
 
         {/* Patient Response */}
@@ -271,7 +268,7 @@ export default function FaceToFaceForm({ srPacketId, onNext, onBack }: Props) {
         <div className="border border-gray-100 rounded-lg p-4 space-y-3 bg-gray-50">
           <p className="text-sm font-semibold text-gray-700">Practitioner Notification</p>
           <div className="grid md:grid-cols-3 gap-3">
-            <SRField label="Practitioner Name"><input {...register("practitionerName")} className={inp} /></SRField>
+            <SRField label="Practitioner Name" error={errors.practitionerName?.message}><input {...register("practitionerName", { required: "Required" })} className={errors.practitionerName ? inpError : inp} /></SRField>
             <SRField label="Date"><input type="date" {...register("practitionerDate")} className={inp} /></SRField>
             <SRField label="Time"><input type="time" {...register("practitionerTime")} className={inp} /></SRField>
           </div>

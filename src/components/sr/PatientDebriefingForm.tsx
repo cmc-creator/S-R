@@ -1,7 +1,7 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import { SRSection, SRField, inp, btnPrimary, btnSecondary } from "./PhysicianOrderForm";
+import { SRSection, SRField, inp, inpError, btnPrimary, btnSecondary } from "./PhysicianOrderForm";
 
 type StaffRow = { name: string; title: string };
 type FormValues = {
@@ -30,7 +30,7 @@ export default function PatientDebriefingForm({ srPacketId, onNext, onBack }: Pr
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const { register, handleSubmit } = useForm<FormValues>({
+  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
       staffInvolved: Array.from({ length: 6 }, () => ({ name: "", title: "" })),
       participatingStaff: Array.from({ length: 6 }, () => ({ name: "", title: "" })),
@@ -39,9 +39,6 @@ export default function PatientDebriefingForm({ srPacketId, onNext, onBack }: Pr
 
   async function onSubmit(data: FormValues) {
     const missing: string[] = [];
-    if (!data.debriefDate) missing.push("Debrief date");
-    if (!data.debriefTime) missing.push("Debrief time");
-    if (!data.rnName?.trim()) missing.push("RN name");
     if (missing.length > 0) { setError("Please complete required fields:\n• " + missing.join("\n• ")); return; }
     setSaving(true);
     setError("");
@@ -73,8 +70,8 @@ export default function PatientDebriefingForm({ srPacketId, onNext, onBack }: Pr
         </p>
 
         <div className="grid md:grid-cols-2 gap-4">
-          <SRField label="Date"><input type="date" {...register("debriefDate", { required: true })} className={inp} /></SRField>
-          <SRField label="Time"><input type="time" {...register("debriefTime")} className={inp} /></SRField>
+          <SRField label="Date" error={errors.debriefDate?.message}><input type="date" {...register("debriefDate", { required: "Required" })} className={errors.debriefDate ? inpError : inp} /></SRField>
+          <SRField label="Time" error={errors.debriefTime?.message}><input type="time" {...register("debriefTime", { required: "Required" })} className={errors.debriefTime ? inpError : inp} /></SRField>
         </div>
 
         {/* Type of Intervention */}
@@ -145,7 +142,7 @@ export default function PatientDebriefingForm({ srPacketId, onNext, onBack }: Pr
             </label>
           </div>
           <div className="grid md:grid-cols-3 gap-4">
-            <div className="col-span-1"><SRField label="RN Signature"><input {...register("rnName")} type="text" className={inp} placeholder="Print name" /></SRField></div>
+            <div className="col-span-1"><SRField label="RN Signature" error={errors.rnName?.message}><input {...register("rnName", { required: "Required" })} type="text" className={errors.rnName ? inpError : inp} placeholder="Print name" /></SRField></div>
             <SRField label="Date"><input type="date" {...register("rnDate")} className={inp} /></SRField>
             <SRField label="Time"><input type="time" {...register("rnTime")} className={inp} /></SRField>
           </div>
