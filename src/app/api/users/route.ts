@@ -18,6 +18,11 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const session = await auth();
+    if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPERVISOR")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { name, email, password, role, title, unit } = await req.json();
 
     if (!name || !email || !password) {

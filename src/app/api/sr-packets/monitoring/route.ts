@@ -8,6 +8,16 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { entries, staffSignatures, ...logData } = body;
 
+  // Delete any existing monitoring log for this packet to prevent duplicates on re-save
+  const existing = await prisma.sRMonitoringLog.findFirst({
+    where: { srPacketId: logData.srPacketId },
+    select: { id: true },
+  });
+  if (existing) {
+    await prisma.sRMonitoringEntry.deleteMany({ where: { monitoringLogId: existing.id } });
+    await prisma.sRMonitoringLog.delete({ where: { id: existing.id } });
+  }
+
   const log = await prisma.sRMonitoringLog.create({
     data: {
       ...logData,
