@@ -85,23 +85,27 @@ export default async function SRPacketDetailPage({ params }: { params: Promise<{
           <p className="text-sm text-gray-500 font-mono mt-1">{packet.id}</p>
         </div>
         <div className="flex gap-2 items-start flex-wrap">
-          {packet.submittedAt ? (
+          {isFullyComplete && !packet.submittedAt && (
+            <SubmitPacketButton packetId={packet.id} />
+          )}
+          {(isFullyComplete || packet.submittedAt) && (
             <Link
               href={`/dashboard/sr-packets/${packet.id}/print`}
               className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition flex items-center gap-1.5"
             >
               🖨 Print / View
             </Link>
-          ) : isFullyComplete ? (
-            <SubmitPacketButton packetId={packet.id} />
-          ) : null}
-          <a
-            href={`/api/sr-packets/${packet.id}/pdf`}
-            download
-            className="border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-4 py-2 rounded-lg text-sm transition flex items-center gap-1.5"
-          >
-            ↓ Export PDF
-          </a>
+          )}
+          {(isFullyComplete || packet.submittedAt) && (
+            <a
+              href={`/dashboard/sr-packets/${packet.id}/print?autoprint=1`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-4 py-2 rounded-lg text-sm transition flex items-center gap-1.5"
+            >
+              ↓ Download PDF
+            </a>
+          )}
           {!packet.submittedAt && (
             <Link
               href={`/dashboard/sr-packets/new?packetId=${packet.id}&patientId=${packet.patientId}`}

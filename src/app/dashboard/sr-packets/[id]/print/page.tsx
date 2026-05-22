@@ -4,11 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
 import PrintButton from "./PrintButton";
 
-export default async function SRPacketPrintPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function SRPacketPrintPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ autoprint?: string }> }) {
   const session = await auth();
   if (!session) redirect("/login");
 
   const { id } = await params;
+  const sp = await searchParams;
+  const autoprint = sp.autoprint === "1";
   let packet: Awaited<ReturnType<typeof prisma.sRPacket.findUnique<{ where: { id: string }; include: { patient: true; createdBy: { select: { name: true; title: true } }; physicianOrder: true; faceToFaceEval: true; monitoringLogs: { include: { entries: true } }; terminationSummary: true; patientDebriefing: true; staffDebriefing: true; afterActionCritique: true } }>>> | null = null;
   try {
     packet = await prisma.sRPacket.findUnique({
@@ -47,7 +49,7 @@ export default async function SRPacketPrintPage({ params }: { params: Promise<{ 
       {/* Print / Back Controls */}
       <div className="no-print flex items-center gap-3 mb-6">
         <a href={`/dashboard/sr-packets/${packet.id}`} className="text-sm text-gray-500 hover:text-gray-800">← Back to Packet</a>
-        <PrintButton />
+        <PrintButton autoprint={autoprint} />
       </div>
 
       {/* Title */}
