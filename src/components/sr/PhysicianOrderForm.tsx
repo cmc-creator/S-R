@@ -1,5 +1,5 @@
 "use client";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useState } from "react";
 
 const LESS_RESTRICTIVE = [
@@ -66,8 +66,6 @@ export default function PhysicianOrderForm({ srPacketId, onNext, onBack }: Props
     },
   });
 
-  const { fields, append, remove } = useFieldArray({ control: undefined as unknown as ReturnType<typeof useForm>["control"], name: "chemMedications" } as Parameters<typeof useFieldArray>[0]);
-  // Note: workaround — using watch for arrays
   const lrm = watch("lessRestrictiveMeans") ?? [];
   const criteria = watch("criteriaForRelease") ?? [];
 
