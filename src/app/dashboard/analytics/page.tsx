@@ -99,10 +99,10 @@ export default async function AnalyticsPage() {
     if (r.incidentLevel) levelCount[r.incidentLevel] = (levelCount[r.incidentLevel] ?? 0) + 1;
   }
   const levelColors: Record<string, { border: string; bg: string; text: string }> = {
-    I:   { border: "#4ade80", bg: "rgba(74,222,128,0.08)",  text: "#16a34a" },
-    II:  { border: "#fbbf24", bg: "rgba(251,191,36,0.08)",  text: "#d97706" },
-    III: { border: "#fb923c", bg: "rgba(251,146,60,0.08)",  text: "#ea580c" },
-    IV:  { border: "#f87171", bg: "rgba(248,113,113,0.08)", text: "#dc2626" },
+    I:   { border: "#4ade80", bg: "rgba(74,222,128,0.08)",  text: "var(--success)" },
+    II:  { border: "#fbbf24", bg: "rgba(251,191,36,0.08)",  text: "var(--warning)" },
+    III: { border: "#fb923c", bg: "rgba(251,146,60,0.08)",  text: "var(--orange)" },
+    IV:  { border: "#f87171", bg: "rgba(248,113,113,0.08)", text: "var(--danger)" },
   };
 
   // Day of week breakdown
@@ -232,7 +232,7 @@ export default async function AnalyticsPage() {
                 <div className="w-full bg-blue-200" style={{ height: `${((total - reviewed) / Math.max(total, 1)) * 100}%` }} title={`${total - reviewed} pending`} />
               </div>
               <span style={{ fontSize: 10, color: "var(--text-3)", lineHeight: 1 }}>{label}</span>
-              <span style={{ fontSize: 9, color: "var(--text-3)", lineHeight: 1, opacity: 0.7 }}>{shortYear}</span>
+              <span style={{ fontSize: 9, color: "var(--text-3)", lineHeight: 1 }}>{shortYear}</span>
             </div>
           ))}
         </div>
@@ -402,7 +402,7 @@ export default async function AnalyticsPage() {
                 {repeatPatients.map((p) => (
                   <tr key={p.name} style={{ borderBottom: "1px solid var(--border-subtle)" }}>
                     <td style={{ padding: "8px 0", color: "var(--text)" }}>{p.name}</td>
-                    <td style={{ padding: "8px 0", textAlign: "right", fontWeight: 700, color: "#f43f5e" }}>{p.count}</td>
+                    <td style={{ padding: "8px 0", textAlign: "right", fontWeight: 700, color: "var(--danger)" }}>{p.count}</td>
                     <td style={{ padding: "8px 0", textAlign: "right", color: "var(--text-2)", fontSize: 12 }}>{format(p.lastDate, "MM/dd/yy")}</td>
                   </tr>
                 ))}

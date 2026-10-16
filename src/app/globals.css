@@ -13,15 +13,28 @@
   --border-subtle:  #ede9e1;
   --text:           #0d0f14;
   --text-2:         #4a4642;
-  --text-3:         #807c76;
+  --text-3:         #625e58;
   --accent:         #1a2744;
   --accent-hover:   #0f1830;
   --accent-fg:      #ffffff;
-  --gold:           #c9a84c;
+  --gold:           #806019;
   --gold-faint:     rgba(201,168,76,0.10);
   --danger:         #b91c1c;
   --danger-bg:      #fef2f2;
   --danger-border:  #fecaca;
+  --control-border: #858077;
+  --success:        #14623f;
+  --success-bg:     rgba(16,185,129,0.08);
+  --success-action: #14623f;
+  --success-action-hover: #104e32;
+  --success-action-fg: #ffffff;
+  --success-hover:  #104e32;
+  --warning:        #805000;
+  --warning-bg:     rgba(245,158,11,0.08);
+  --orange:         #943d08;
+  --orange-bg:      rgba(251,146,60,0.08);
+  --purple:         #7530aa;
+  --purple-bg:      rgba(147,51,234,0.08);
   color-scheme: light;
 }
 
@@ -35,7 +48,7 @@
   --border-subtle:  #191b26;
   --text:           #f0ede8;
   --text-2:         #a8a39c;
-  --text-3:         #706d67;
+  --text-3:         #a29b93;
   --accent:         #c9a84c;
   --accent-hover:   #d4b45e;
   --accent-fg:      #09090d;
@@ -44,6 +57,19 @@
   --danger:         #f87171;
   --danger-bg:      #1c0909;
   --danger-border:  #7f1d1d;
+  --control-border: #817b73;
+  --success:        #34d399;
+  --success-bg:     rgba(16,185,129,0.08);
+  --success-action: #14623f;
+  --success-action-hover: #104e32;
+  --success-action-fg: #ffffff;
+  --success-hover:  #6ee7b7;
+  --warning:        #fbbf24;
+  --warning-bg:     rgba(245,158,11,0.08);
+  --orange:         #fb923c;
+  --orange-bg:      rgba(251,146,60,0.08);
+  --purple:         #c084fc;
+  --purple-bg:      rgba(147,51,234,0.08);
   color-scheme: dark;
 }
 
@@ -66,9 +92,15 @@ html {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* Keep keyboard focus visible in both themes. */
+button:focus-visible, a:focus-visible, input:focus-visible,
+textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
 /* Input focus ring using accent */
 input:focus, textarea:focus, select:focus {
-  outline: none;
   border-color: var(--gold) !important;
   box-shadow: 0 0 0 3px var(--gold-faint);
 }
@@ -122,10 +154,15 @@ img.bg-white     { background: white !important; }
 .hover\:bg-blue-700:hover   { background: var(--accent) !important; }
 .hover\:bg-purple-800:hover { background: var(--accent-hover) !important; }
 
-/* Text on accent buttons: keep white but set to accent-fg */
+/* Accent backgrounds need matching foregrounds on the element AND its icons. */
+.bg-blue-700, .bg-blue-600, .bg-purple-700,
 .bg-blue-700 > *,
 .bg-blue-600 > *,
 .bg-purple-700 > * { color: var(--accent-fg) !important; }
+
+/* Submission buttons retain a dark green surface and readable white text. */
+.bg-green-600 { background: var(--success-action) !important; color: var(--success-action-fg) !important; }
+.hover\:bg-green-700:hover { background: var(--success-action-hover) !important; }
 
 /* --- Links: blue → gold --- */
 .text-blue-600 { color: var(--gold) !important; }
@@ -134,7 +171,7 @@ img.bg-white     { background: white !important; }
 /* --- Info / linked alert boxes: blue → gold-faint --- */
 .bg-blue-50    { background: var(--gold-faint) !important; }
 .border-blue-200 { border-color: rgba(201,168,76,0.30) !important; }
-.text-blue-800 { color: var(--gold) !important; }
+.text-blue-800, .text-blue-900 { color: var(--gold) !important; }
 .bg-blue-100   { background: var(--gold-faint) !important; }
 
 /* --- Badges: incident level (blue) → gold --- */
@@ -147,10 +184,10 @@ img.bg-white     { background: white !important; }
 .to-blue-700   { --tw-gradient-to: var(--accent-hover) !important; }
 
 /* --- Complete / success states (emerald) --- */
-.bg-emerald-50, .bg-emerald-100 { background: rgba(16,185,129,0.08) !important; }
+.bg-emerald-50, .bg-emerald-100 { background: var(--success-bg) !important; }
 .border-emerald-200              { border-color: rgba(16,185,129,0.25) !important; }
-.text-emerald-700, .text-emerald-800 { color: #34d399 !important; }
-.text-emerald-600                { color: #34d399 !important; }
+.text-emerald-700, .text-emerald-800 { color: var(--success) !important; }
+.text-emerald-600                { color: var(--success) !important; }
 .hover\:bg-emerald-200:hover     { background: rgba(16,185,129,0.14) !important; }
 
 /* --- Form inputs: use theme vars as default surface --- */
@@ -159,10 +196,10 @@ select,
 textarea {
   background: var(--bg-subtle);
   color: var(--text);
-  border-color: var(--border);
+  border-color: var(--control-border);
 }
 input::placeholder,
-textarea::placeholder { color: var(--text-3); }
+textarea::placeholder { color: var(--text-3); opacity: 1; }
 
 /* Select option items */
 option { background: var(--bg-elevated); color: var(--text); }
@@ -175,29 +212,36 @@ option { background: var(--bg-elevated); color: var(--text); }
 .border-red-100 { border-color: var(--danger-border) !important; }
 .border-red-200 { border-color: var(--danger-border) !important; }
 .border-red-400 { border-color: var(--danger) !important; }
-.bg-orange-50  { background: rgba(251,146,60,0.08) !important; }
+.bg-orange-50  { background: var(--orange-bg) !important; }
 .border-orange-100 { border-color: rgba(251,146,60,0.2) !important; }
-.text-orange-700 { color: #fb923c !important; }
+.text-orange-700 { color: var(--orange) !important; }
 
 /* --- Submitted / green success banners --- */
-.bg-green-50        { background: rgba(16,185,129,0.08) !important; }
+.bg-green-50        { background: var(--success-bg) !important; }
 .border-green-300   { border-color: rgba(16,185,129,0.30) !important; }
-.text-green-800     { color: #34d399 !important; }
-.text-green-700     { color: #34d399 !important; }
-.text-green-600     { color: #34d399 !important; }
-.hover\:text-green-900:hover { color: #6ee7b7 !important; }
+.text-green-800, .text-green-900 { color: var(--success) !important; }
+.text-green-700     { color: var(--success) !important; }
+.text-green-600     { color: var(--success) !important; }
+.hover\:text-green-900:hover { color: var(--success-hover) !important; }
 
 /* --- Amber / warning states --- */
-.bg-amber-50        { background: rgba(245,158,11,0.08) !important; }
+.bg-amber-50        { background: var(--warning-bg) !important; }
 .border-amber-200   { border-color: rgba(245,158,11,0.25) !important; }
 .border-amber-100   { border-color: rgba(245,158,11,0.20) !important; }
-.text-yellow-800    { color: #fbbf24 !important; }
-.text-amber-700     { color: #fbbf24 !important; }
+.text-yellow-800    { color: var(--warning) !important; }
+.text-amber-700     { color: var(--warning) !important; }
 
 /* --- Progress bar track --- */
 .bg-gray-200        { background: var(--border) !important; }
 
 /* --- Purple badges --- */
-.bg-purple-50       { background: rgba(147,51,234,0.08) !important; }
+.bg-purple-50       { background: var(--purple-bg) !important; }
 .border-purple-100  { border-color: rgba(147,51,234,0.20) !important; }
-.text-purple-700    { color: #a855f7 !important; }
+.text-purple-700    { color: var(--purple) !important; }
+
+/* Legacy input border utilities are !important; match that priority without
+   overriding explicit validation errors. Decorative panel borders stay subtle. */
+:is(input, select, textarea):is(.border-gray-300, .border-gray-400, .border-slate-300) {
+  border-color: var(--control-border) !important;
+}
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }

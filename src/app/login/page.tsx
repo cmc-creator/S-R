@@ -116,7 +116,7 @@ export default function LoginPage() {
                     style={{
                       width: "100%",
                       background: "var(--bg-subtle)",
-                      border: "1px solid var(--border)",
+                      border: "1px solid var(--control-border)",
                       borderRadius: 8,
                       padding: "10px 14px",
                       fontSize: 14,
@@ -149,7 +149,7 @@ export default function LoginPage() {
                     style={{
                       width: "100%",
                       background: "var(--bg-subtle)",
-                      border: "1px solid var(--border)",
+                      border: "1px solid var(--control-border)",
                       borderRadius: 8,
                       padding: "10px 14px",
                       fontSize: 14,
