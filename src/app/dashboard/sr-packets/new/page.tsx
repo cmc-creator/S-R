@@ -89,12 +89,12 @@ function NewSRPacketContent() {
               background: isActive
                 ? "var(--accent)"
                 : isDone
-                ? "rgba(16,185,129,0.15)"
+                ? "var(--success-bg)"
                 : "var(--bg-subtle)",
               color: isActive
                 ? "var(--accent-fg)"
                 : isDone
-                ? "#34d399"
+                ? "var(--success)"
                 : "var(--text-3)",
               outline: isActive ? "2px solid var(--accent)" : isDone ? "1px solid rgba(52,211,153,0.4)" : "none",
               outlineOffset: 2,
