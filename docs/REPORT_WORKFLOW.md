@@ -49,3 +49,11 @@ On an isolated preview database with synthetic patients and authorized staff/sup
 - Print incidents, draft packets and submitted packets using browser print preview; confirm signatures, all saved fields, checklist questions/comments, draft labeling and internal-review page separation. Check desktop and narrow layouts.
 
 The repository seed is not a documented isolated preview environment. Do not run it against a live/shared clinical database to obtain test access.
+
+## Packet workspace layout
+
+The packet creator now uses a desktop section rail (horizontal on smaller screens), visible patient context, a seven-section saved-progress indicator, and sticky Back / Save & Continue controls. Previously saved sections remain revisitable within the existing navigation rules. A changed field shows an unsaved indicator; saving a section successfully clears its indicator. Browser reload/close and workspace exit links warn about unsaved edits. Changing steps within the workspace preserves mounted form state; it does not itself save.
+
+The packet list filters instantly by patient name/MRN and in-progress/submitted status. Search stays in component memory, not in the URL or browser storage. Draft list actions resume the existing packet; submitted actions open the overview. The overview prioritizes Edit / Continue and puts destructive deletion inside Manage draft. This is presentation/navigation work only: no reporting fields, clinical validators, API contracts, schema or database migrations changed.
+
+Before release, verify the authenticated UI on an isolated preview using synthetic patient records at desktop and phone sizes: section focus/scrolling, sidebar navigation, keyboard tab order, errors and label focus, sticky actions, dirty/save indicators, leave/reload warning, in-page list filters, and resume/view destinations. The repository does not document an isolated preview test account; seed defaults must not be assumed safe for a live/shared clinical database. Static-render and TypeScript/build tests are not browser verification.

@@ -7,7 +7,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import SubmitPacketButton from "@/components/sr/SubmitPacketButton";
 
-function SectionStatus({ label, complete }: { label: string; complete: boolean }) {
+function SectionStatus({ label, complete, href }: { label: string; complete: boolean; href?: string }) {
   return (
     <div className={`flex items-center justify-between px-4 py-3 rounded-lg text-sm border ${
       complete
@@ -27,7 +27,7 @@ function SectionStatus({ label, complete }: { label: string; complete: boolean }
         <span className="font-medium">{label}</span>
       </div>
       <span className={`text-xs font-semibold ${complete ? "text-emerald-600" : "text-slate-400"}`}>
-        {complete ? "Complete" : "Needs attention"}
+        {href && !complete ? <Link className="underline underline-offset-4" href={href}>Resume packet →</Link> : complete ? "Complete" : "Needs attention"}
       </span>
     </div>
   );
@@ -79,9 +79,9 @@ export default async function SRPacketDetailPage({ params }: { params: Promise<{
   const isFullyComplete = totalComplete === sections.length;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="packet-overview max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
           <div className="flex items-center gap-3 mb-1">
             <Link href="/dashboard/sr-packets" className="text-sm text-gray-400 hover:text-gray-600">
@@ -92,7 +92,6 @@ export default async function SRPacketDetailPage({ params }: { params: Promise<{
           <p className="text-sm text-gray-500 font-mono mt-1">{packet.id}</p>
         </div>
         <div className="flex gap-2 items-start flex-wrap">
-          {!packet.submittedAt && ["ADMIN", "SUPERVISOR"].includes(session.user.role) && <DeleteReportButton kind="sr-packets" id={packet.id} />}
           {isFullyComplete && !packet.submittedAt && (
             <SubmitPacketButton packetId={packet.id} />
           )}
@@ -117,7 +116,7 @@ export default async function SRPacketDetailPage({ params }: { params: Promise<{
           {!packet.submittedAt && (
             <Link
               href={`/dashboard/sr-packets/new?packetId=${packet.id}&patientId=${packet.patientId}`}
-              className="border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-4 py-2 rounded-lg text-sm transition"
+              className="bg-[var(--accent)] text-[var(--accent-fg)] font-semibold px-4 py-2 rounded-lg text-sm transition order-first"
             >
               Edit / Continue
             </Link>
@@ -183,7 +182,7 @@ export default async function SRPacketDetailPage({ params }: { params: Promise<{
         <h2 className="font-bold text-slate-500 mb-3 text-xs uppercase tracking-wider">Documentation Sections</h2>
         <div className="space-y-2">
           {sections.map((s) => (
-            <SectionStatus key={s.label} label={s.label} complete={s.complete} />
+            <SectionStatus key={s.label} label={s.label} complete={s.complete} href={!packet.submittedAt ? `/dashboard/sr-packets/new?packetId=${packet.id}` : undefined} />
           ))}
         </div>
       </div>
@@ -254,6 +253,7 @@ export default async function SRPacketDetailPage({ params }: { params: Promise<{
         </div>
       )}
 
+      {!packet.submittedAt && ["ADMIN", "SUPERVISOR"].includes(session.user.role) && <details className="no-print border-t border-gray-200 pt-4 text-sm"><summary className="text-gray-500 cursor-pointer">Manage draft</summary><div className="mt-3"><DeleteReportButton kind="sr-packets" id={packet.id} /></div></details>}
       {/* Created by */}
       <div className="text-xs text-gray-400 text-right pb-4">
         Created by {packet.createdBy.name} {packet.createdBy.title ? `(${packet.createdBy.title})` : ""} &bull; {format(new Date(packet.createdAt), "MM/dd/yyyy h:mm a")}

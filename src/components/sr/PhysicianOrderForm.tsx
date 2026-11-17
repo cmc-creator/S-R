@@ -1,7 +1,7 @@
 "use client";
 import { sectionIssues } from "@/lib/reports/sections";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useId, isValidElement, cloneElement, type ReactElement } from "react";
 
 const LESS_RESTRICTIVE = [
   "Separated from Group/Milieu", "Allowing to pace and vent", "Distraction",
@@ -106,7 +106,7 @@ export default function PhysicianOrderForm({ srPacketId, onNext, onBack, initial
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <form onSubmit={handleSubmit(onSubmit)} className="packet-section-form space-y-5">
       <SRSection title="Seclusion & Restraint Physician Order">
         <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded px-3 py-2 mb-4">
           An order must be obtained for every episode of SECLUSION, RESTRAINT or CHEMICAL RESTRAINT, no longer than 30 minutes after initiation.
@@ -298,7 +298,7 @@ export default function PhysicianOrderForm({ srPacketId, onNext, onBack, initial
 
       {error && <div role="alert" className="text-red-700 text-sm bg-red-50 border border-red-200 rounded px-4 py-3 whitespace-pre-line">{error}</div>}
 
-      <div className="flex justify-between">
+      <div className="packet-form-actions">
         <button type="button" onClick={onBack} className={btnSecondary}>← Back</button>
         <button type="submit" disabled={saving} className={btnPrimary}>{saving ? "Saving…" : "Save & Continue →"}</button>
       </div>
@@ -308,7 +308,7 @@ export default function PhysicianOrderForm({ srPacketId, onNext, onBack, initial
 
 export function SRSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="packet-form-card bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="bg-slate-50 border-b border-slate-200 px-5 py-3">
         <h3 className="font-bold text-slate-600 text-xs uppercase tracking-widest">{title}</h3>
       </div>
@@ -318,14 +318,16 @@ export function SRSection({ title, children }: { title: string; children: React.
 }
 
 export function SRField({ label, children, error }: { label: string; children: React.ReactNode; error?: string }) {
+  const id = useId();
+  const directControl = isValidElement(children) && typeof children.type === "string" && ["input", "select", "textarea"].includes(children.type);
   return (
     <div>
-      <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+      <label htmlFor={directControl ? id : undefined} className="block text-sm font-semibold text-slate-700 mb-1.5">
         {label}
         {error && <span className="text-red-500 font-normal ml-1 text-xs">*</span>}
       </label>
-      {children}
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      {directControl ? cloneElement(children as ReactElement<{ id?: string; "aria-invalid"?: boolean; "aria-describedby"?: string }>, { id, "aria-invalid": !!error, "aria-describedby": error ? `${id}-error` : undefined }) : children}
+      {error && <p id={`${id}-error`} className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   );
 }

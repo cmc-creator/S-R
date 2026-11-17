@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { sectionKeys, sectionIssues, toFormSection } from "@/lib/reports/sections";
+import PacketWorkspace from "@/components/sr/PacketWorkspace";
 import PatientSelector from "@/components/PatientSelector";
 import PhysicianOrderForm from "@/components/sr/PhysicianOrderForm";
 import FaceToFaceForm from "@/components/sr/FaceToFaceForm";
@@ -12,16 +13,6 @@ import PatientDebriefingForm from "@/components/sr/PatientDebriefingForm";
 import StaffDebriefingForm from "@/components/sr/StaffDebriefingForm";
 import AfterActionForm from "@/components/sr/AfterActionForm";
 
-const STEPS = [
-  "Cover Sheet",
-  "Physician Order",
-  "1-Hr Face-to-Face",
-  "1:1 Monitoring",
-  "Termination",
-  "Patient Debriefing",
-  "Staff Debriefing",
-  "After Action Critique",
-];
 
 function NewSRPacketContent() {
   const router = useRouter();
@@ -34,6 +25,7 @@ function NewSRPacketContent() {
   const [loadFailed, setLoadFailed] = useState(false);
   const [visited, setVisited] = useState<number[]>([]);
   const [completed, setCompleted] = useState<number[]>([]);
+  const [dirty, setDirty] = useState<number[]>([]);
 
   const [patientId, setPatientId] = useState(searchParams.get("patientId") ?? "");
   const incidentId = searchParams.get("incidentId");
@@ -89,7 +81,8 @@ function NewSRPacketContent() {
   }
 
   function next() {
-    const nextStep = Math.min(step + 1, STEPS.length - 1);
+    const nextStep = Math.min(step + 1, 7);
+    setDirty(items => items.filter(i => i !== step));
     setCompleted(done => Array.from(new Set([...done, step])));
     setVisited(v => Array.from(new Set([...v, nextStep])));
     setMaxStep((m) => Math.max(m, nextStep));
@@ -112,66 +105,15 @@ function NewSRPacketContent() {
   ];
 
   return (
-    <div style={{ maxWidth: 896, margin: "0 auto" }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text)", margin: 0 }}>S&amp;R Packet</h1>
-        <p style={{ fontSize: "0.875rem", color: "var(--text-3)", marginTop: 4 }}>Seclusion / Physical Hold / Chemical Restraint Documentation</p>
-      </div>
-
-      <aside className="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-6 text-sm text-blue-950" aria-live="polite">
-        {patientLabel && <p className="font-semibold mb-2">Patient: {patientLabel}</p>}
-        <p className="font-semibold">Step {step + 1} of {STEPS.length}: {STEPS[step]}</p>
-        <p className="mt-1">{guidance[step]}</p>
-        <p className="mt-2">Save &amp; Continue saves to the server. Back keeps your entries during this visit; unsaved changes are lost if you leave or reload. No patient data is stored in browser storage. Follow facility policy for clinical care and deadlines.</p>
-        {packetId && <Link className="underline mt-2 inline-block" href={`/dashboard/sr-packets/${packetId}`}>Review saved progress / finish later →</Link>}
-      </aside>
-      {/* Stepper */}
-      <div style={{ display: "flex", overflowX: "auto", gap: 6, marginBottom: 32, paddingBottom: 8 }}>
-        {STEPS.map((s, i) => {
-          const isActive = i === step;
-          const isDone = completed.includes(i);
-          const isReachable = i <= maxStep && (!packetId || i > 0);
-          return (
-          <button
-            key={s}
-            type="button"
-            disabled={!isReachable}
-            onClick={() => { if (isReachable) { setVisited(v => Array.from(new Set([...v, i]))); setStep(i); } }}
-            style={{
-              flexShrink: 0,
-              padding: "6px 12px",
-              borderRadius: 9999,
-              fontSize: "0.75rem",
-              fontWeight: 500,
-              border: "none",
-              cursor: isReachable ? "pointer" : "default",
-              opacity: isReachable ? 1 : 0.35,
-              transition: "all 0.15s",
-              background: isActive
-                ? "var(--accent)"
-                : isDone
-                ? "rgba(16,185,129,0.15)"
-                : "var(--bg-subtle)",
-              color: isActive
-                ? "var(--accent-fg)"
-                : isDone
-                ? "#34d399"
-                : "var(--text-3)",
-              outline: isActive ? "2px solid var(--accent)" : isDone ? "1px solid rgba(52,211,153,0.4)" : "none",
-              outlineOffset: 2,
-            }}
-          >
-            {isDone ? `✓ ${s}` : `${i + 1}. ${s}`}
-          </button>
-          );
-        })}
-      </div>
-
+    <PacketWorkspace step={step} maxStep={maxStep} completed={completed} packetId={packetId}
+      patientLabel={patientLabel} guidance={guidance[step]} dirty={dirty}
+      onEdit={() => { if (step > 0) setDirty(items => items.includes(step) ? items : [...items, step]); }}
+      onNavigate={i => { setVisited(v => Array.from(new Set([...v, i]))); setStep(i); }}>
       {/* Step content */}
       {step === 0 && (
         <div style={{ background: "var(--bg-elevated)", borderRadius: 12, border: "1px solid var(--border)", padding: 24, display: "flex", flexDirection: "column", gap: 24 }}>
           <div>
-            <h2 style={{ fontWeight: 700, fontSize: "1.125rem", color: "var(--text)", marginBottom: 4 }}>Cover Sheet</h2>
+            <h2 style={{ fontWeight: 700, fontSize: "1.125rem", color: "var(--text)", marginBottom: 4 }}>Confirm patient &amp; episode</h2>
             <p style={{ fontSize: "0.875rem", color: "var(--text-3)" }}>
               The following forms must be completed for ANY seclusion/personal or chemical restraint.
               Ensure to include the incident report associated with the S&amp;R.
@@ -186,7 +128,7 @@ function NewSRPacketContent() {
             <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--text-2)", marginBottom: 8 }}>Patient</p>
             <PatientSelector value={patientId} onChange={setPatientId} />
           </div>
-          {error && <p style={{ color: "var(--danger)", fontSize: "0.875rem" }}>{error}</p>}
+          {error && <p role="alert" style={{ color: "var(--danger)", fontSize: "0.875rem" }}>{error}</p>}
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <button
               type="button"
@@ -245,7 +187,7 @@ function NewSRPacketContent() {
           <AfterActionForm initialValues={initial.afterActionCritique} srPacketId={packetId} onNext={finish} onBack={prev} />
         </div>
       )}
-    </div>
+    </PacketWorkspace>
   );
 }
 
