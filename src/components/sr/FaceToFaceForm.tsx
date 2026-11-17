@@ -1,4 +1,5 @@
 "use client";
+import { sectionIssues } from "@/lib/reports/sections";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { SRSection, SRField, inp, inpError, btnPrimary, btnSecondary } from "./PhysicianOrderForm";
@@ -65,13 +66,14 @@ type FormValues = {
   rnTime: string;
 };
 
-interface Props { srPacketId: string; onNext: () => void; onBack: () => void; }
+interface Props { srPacketId: string; onNext: () => void; onBack: () => void; initialValues?: Record<string, unknown>; }
 
-export default function FaceToFaceForm({ srPacketId, onNext, onBack }: Props) {
+export default function FaceToFaceForm({ srPacketId, onNext, onBack, initialValues }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormValues>({
+    values: initialValues as FormValues | undefined,
     defaultValues: { mood: [], affect: [], discontinueCriteria: [] },
   });
 
@@ -85,8 +87,8 @@ export default function FaceToFaceForm({ srPacketId, onNext, onBack }: Props) {
   }
 
   async function onSubmit(data: FormValues) {
-    const missing: string[] = [];
-    if (missing.length > 0) { setError("Please complete required fields:\n• " + missing.join("\n• ")); return; }
+    const issues = sectionIssues("faceToFaceEval", data);
+    if (issues.length) { setError("Complete before continuing: " + issues.join("; ")); return; }
     setSaving(true);
     setError("");
     try {
@@ -101,7 +103,7 @@ export default function FaceToFaceForm({ srPacketId, onNext, onBack }: Props) {
           rnDate: data.rnDate ? new Date(data.rnDate).toISOString() : null,
         }),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) { const problem = await res.json(); throw new Error(problem.error ?? "Could not save. Try again; your entries are still here."); }
       onNext();
     } catch (e) {
       setError(String(e));
@@ -290,11 +292,11 @@ export default function FaceToFaceForm({ srPacketId, onNext, onBack }: Props) {
         </div>
       </SRSection>
 
-      {error && <div className="text-red-700 text-sm bg-red-50 border border-red-200 rounded px-4 py-3 whitespace-pre-line">{error}</div>}
+      {error && <div role="alert" className="text-red-700 text-sm bg-red-50 border border-red-200 rounded px-4 py-3 whitespace-pre-line">{error}</div>}
 
       <div className="flex justify-between">
         <button type="button" onClick={onBack} className={btnSecondary}>← Back</button>
-        <button type="submit" disabled={saving} className={btnPrimary}>{saving ? "Saving…" : "Save & Next →"}</button>
+        <button type="submit" disabled={saving} className={btnPrimary}>{saving ? "Saving…" : "Save & Continue →"}</button>
       </div>
     </form>
   );

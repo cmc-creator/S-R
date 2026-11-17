@@ -1,3 +1,4 @@
+import { deleteReport } from "@/lib/reports/delete-report";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -26,4 +27,9 @@ export async function GET(
   });
   if (!packet) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(packet);
+}
+
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return deleteReport("packet", id);
 }

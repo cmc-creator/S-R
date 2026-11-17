@@ -1,3 +1,4 @@
+import { PrintReportButton, DeleteReportButton } from "@/components/ReportActions";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
@@ -45,11 +46,14 @@ export default async function IncidentDetailPage({
         <div>
           <Link href="/dashboard/incidents" className="text-sm text-blue-600 hover:underline">← All Incidents</Link>
           <h1 className="text-2xl font-bold text-gray-900 mt-1">Incident Report</h1>
+          <p className="print-only text-xs">CONFIDENTIAL — {ir.id}</p>
           <p className="text-gray-500 text-sm">
             {ir.patient.fullName} &middot; MRN {ir.patient.mrn} &middot; {format(new Date(ir.incidentDate), "MMMM d, yyyy")}
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="no-print flex gap-3 flex-wrap">
+          <PrintReportButton />
+          {canEditQM && <DeleteReportButton kind="incidents" id={ir.id} />}
           <a
             href={`/api/incidents/${ir.id}/pdf`}
             download
@@ -229,6 +233,22 @@ export default async function IncidentDetailPage({
         </div>
       )}
 
+      <div className="print-only">
+        <DetailCard title="House Supervisor Review (saved)">
+          <Row label="Name / Title" value={`${ir.supervisorName ?? "Not documented"} ${ir.supervisorTitle ?? ""}`} />
+          <Row label="Date" value={ir.supervisorDate ? format(ir.supervisorDate, "MM/dd/yyyy") : "Not documented"} />
+          <Row label="Comments" value={ir.supervisorComments ?? "Not documented"} />
+          {ir.supervisorSignature && <SavedSignature value={ir.supervisorSignature} />}
+        </DetailCard>
+        <DetailCard title="QM / Risk Management Review (saved)">
+          <Row label="Reviewed by" value={ir.reviewedByName ?? "Not documented"} />
+          <Row label="Date" value={ir.reviewedByDate ? format(ir.reviewedByDate, "MM/dd/yyyy") : "Not documented"} />
+          <Row label="Level / Initials" value={`${ir.incidentLevel ?? "Not documented"} ${ir.qmReviewInitials ?? ""}`} />
+          <Row label="Comments" value={ir.qmComments ?? "Not documented"} />
+          {ir.qmSignature && <SavedSignature value={ir.qmSignature} />}
+        </DetailCard>
+      </div>
+      <div className="no-print space-y-6">
       {/* House Supervisor Review */}
       <SupervisorReviewSection
         incidentId={ir.id}
@@ -255,6 +275,8 @@ export default async function IncidentDetailPage({
           qmSignature: ir.qmSignature,
         }}
       />
+
+      </div>
 
       {ir.srPackets.length > 0 && (
         <DetailCard title="Linked S&R Packets">
@@ -291,4 +313,9 @@ function Row({ label, value }: { label: string; value: string }) {
       <span className="text-gray-800">{value}</span>
     </div>
   );
+}
+
+function SavedSignature({ value }: { value: string }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={value} alt="Saved review signature" className="max-h-20" />;
 }

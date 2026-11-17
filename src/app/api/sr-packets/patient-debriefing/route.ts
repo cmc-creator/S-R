@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { prepareSection } from "@/lib/reports/save-section";
 
 export async function POST(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const body = await req.json();
-  const record = await prisma.sRPatientDebriefing.upsert({
-    where: { srPacketId: body.srPacketId },
-    update: { ...body, debriefDate: new Date(body.debriefDate) },
-    create: { ...body, debriefDate: new Date(body.debriefDate) },
+  return prisma.$transaction(async tx => {
+    const result = await prepareSection(req, "patientDebriefing", "SRPatientDebriefing", tx);
+    if (result.error) return result.error;
+    const data = result.data as unknown as Prisma.SRPatientDebriefingUncheckedCreateInput;
+    const record = await tx.sRPatientDebriefing.upsert({
+      where: { srPacketId: result.packet.id },
+      update: data,
+      create: { ...data },
+    });
+    return NextResponse.json(record);
   });
-  return NextResponse.json(record);
 }

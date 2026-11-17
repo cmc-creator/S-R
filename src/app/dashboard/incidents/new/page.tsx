@@ -1,4 +1,5 @@
 "use client";
+import { incidentIssues } from "@/lib/reports/incident";
 import { useForm, useFieldArray } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -222,7 +223,15 @@ export default function NewIncidentPage() {
     }
   }
 
+  async function goTo(next: number) {
+    const issues = incidentIssues(watch(), 1);
+    if (next > 1 && issues.length) { setError("Complete step 1: " + issues.join("; ")); setPage(1); return; }
+    setError(""); setPage(next);
+  }
   async function onSubmit(data: FormValues) {
+    const issues = incidentIssues(data);
+    if (issues.length) { setError("Complete before submitting: " + issues.join("; ")); setPage(incidentIssues(data, 1).length ? 1 : 2); return; }
+    if (page !== 3) { setPage(3); return; }
     setSaving(true);
     setError("");
     try {
@@ -236,13 +245,13 @@ export default function NewIncidentPage() {
           painScale: data.painScale ? parseInt(data.painScale) : null,
           incidentDate: new Date(data.incidentDate).toISOString(),
           nurseAssessorDate: data.nurseAssessorDate ? new Date(data.nurseAssessorDate).toISOString() : null,
-          witnesses: data.noOtherWitnesses ? [] : data.witnesses,
+          witnesses: data.noOtherWitnesses ? [] : data.witnesses.map(w => ({ ...w, isStaff: String(w.isStaff) === "true" })),
           notifications: data.notificationsNA
             ? []
             : data.notifications.filter((n) => n.name || n.contactMethod),
         }),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) { const problem = await res.json(); throw new Error(problem.error ?? "Could not save. Your entries are still here; try again."); }
       const report = await res.json();
       router.push(`/dashboard/incidents/${report.id}`);
     } catch (e) {
@@ -259,11 +268,17 @@ export default function NewIncidentPage() {
           <p className="text-sm text-gray-500">One IR per patient. No sections left blank.</p>
         </div>
         <div className="flex gap-2">
-          <PageTab n={1} current={page} onClick={() => setPage(1)} label="Page 1" />
-          <PageTab n={2} current={page} onClick={() => setPage(2)} label="Page 2" />
+          <PageTab n={1} current={page} onClick={() => { setError(""); setPage(1); }} label="1. Event" />
+          <PageTab n={2} current={page} onClick={() => goTo(2)} label="2. Care & notices" />
         </div>
       </div>
 
+      <aside className="bg-blue-50 border border-blue-200 text-blue-950 rounded-xl p-4 mb-5 text-sm">
+        <p className="font-semibold">Step {page} of 3 — {page === 1 ? "Describe the event" : page === 2 ? "Document care and notifications" : "Review, then submit"}</p>
+        <p className="mt-1">{page === 1 ? "Confirm the patient, record when and where it happened, select the incident type and describe the facts. Name witnesses or explicitly mark none." : page === 2 ? "Record the assessment, interventions and notifications. Use N/A only when appropriate; incomplete documentation will be flagged before submission." : "Check the patient and event details below. Go back to correct anything before creating the report."}</p>
+        <p className="mt-2">Entries stay while moving between steps. This incident is only saved when you submit; leaving or reloading before then loses unsaved entries. Do not enter patient information on a shared, unattended screen.</p>
+      </aside>
+      {error && <div role="alert" className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 mb-4">{error}</div>}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {page === 1 && (
           <>
@@ -425,11 +440,11 @@ export default function NewIncidentPage() {
                   const hasSig = !!signature;
                   setCategoryError(!hasCategories);
                   setSignatureError(!hasSig);
-                  if (valid && hasCategories && hasSig) setPage(2);
+                  if (valid && hasCategories && hasSig) await goTo(2);
                 }}
                 className={btnPrimary}
               >
-                Next: Page 2 →
+                Next: Care & notifications →
               </button>
             </div>
           </>
@@ -582,10 +597,24 @@ export default function NewIncidentPage() {
                 ← Back to Page 1
               </button>
               <button type="submit" disabled={saving} className={btnPrimary}>
-                {saving ? "Saving…" : "Submit Incident Report"}
+                Review report →
               </button>
             </div>
           </>
+        )}
+        {page === 3 && (
+          <Section title="Review before submitting">
+            <dl className="space-y-2 text-sm">
+              <dt className="font-semibold">Patient</dt><dd>Confirm the selected patient before submitting:</dd>
+              <PatientSelector value={watch("patientId")} onChange={id => setValue("patientId", id)} />
+              <dt className="font-semibold">Reported by</dt><dd>{watch("reporterName")}</dd>
+              <dt className="font-semibold">When / where</dt><dd>{watch("incidentDate")} {watch("incidentTime")} — {watch("unit")}, {watch("location")}</dd>
+              <dt className="font-semibold">Summary</dt><dd className="whitespace-pre-wrap">{watch("summaryOfEvent")}</dd>
+              <dt className="font-semibold">Care and notifications</dt><dd>Assessment: {nursingAssessmentNA ? "N/A" : "Recorded"}. Interventions: {interventionsNA ? "None given" : "Recorded"}. Notifications: {notificationsNA ? "N/A" : "Recorded"}.</dd>
+            </dl>
+            <p className="text-sm mt-4">Submission creates the incident report. If S&amp;R was used, create its linked packet from the saved report.</p>
+            <div className="flex justify-between mt-4"><button type="button" onClick={() => setPage(2)} className={btnSecondary}>← Back to care &amp; notices</button><button type="submit" disabled={saving} className={btnPrimary}>{saving ? "Saving…" : "Submit Incident Report"}</button></div>
+          </Section>
         )}
       </form>
     </div>

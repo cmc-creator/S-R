@@ -1,5 +1,6 @@
 "use client";
-import { useForm, useFieldArray } from "react-hook-form";
+import { sectionIssues } from "@/lib/reports/sections";
+import { useForm } from "react-hook-form";
 import { useState } from "react";
 
 const LESS_RESTRICTIVE = [
@@ -39,9 +40,7 @@ type FormValues = {
   criteriaForRelease: string[];
   criteriaOther: string;
   criteriaNA: boolean;
-  patientInformedYes: boolean;
-  patientInformedNo: boolean;
-  patientInformedNA: boolean;
+  patientInformed: string;
   isTelephoneOrder: boolean;
   isReadBack: boolean;
   nurseName: string;
@@ -52,13 +51,14 @@ type FormValues = {
   physicianTime: string;
 };
 
-interface Props { srPacketId: string; onNext: () => void; onBack: () => void; }
+interface Props { srPacketId: string; onNext: () => void; onBack: () => void; initialValues?: Record<string, unknown>; }
 
-export default function PhysicianOrderForm({ srPacketId, onNext, onBack }: Props) {
+export default function PhysicianOrderForm({ srPacketId, onNext, onBack, initialValues }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormValues>({
+    values: initialValues as FormValues | undefined,
     defaultValues: {
       chemMedications: [{ date: "", time: "", medication: "", dosage: "", route: "IM" }],
       lessRestrictiveMeans: [],
@@ -66,8 +66,6 @@ export default function PhysicianOrderForm({ srPacketId, onNext, onBack }: Props
     },
   });
 
-  const { fields, append, remove } = useFieldArray({ control: undefined as unknown as ReturnType<typeof useForm>["control"], name: "chemMedications" } as Parameters<typeof useFieldArray>[0]);
-  // Note: workaround — using watch for arrays
   const lrm = watch("lessRestrictiveMeans") ?? [];
   const criteria = watch("criteriaForRelease") ?? [];
 
@@ -81,10 +79,8 @@ export default function PhysicianOrderForm({ srPacketId, onNext, onBack }: Props
   }
 
   async function onSubmit(data: FormValues) {
-    if (!data.isPhysicalRestraint && !data.isSeclusion && !data.isChemicalRestraint) {
-      setError("Select at least one intervention type (Physical Restraint, Seclusion, or Chemical Restraint).");
-      return;
-    }
+    const issues = sectionIssues("physicianOrder", data);
+    if (issues.length) { setError("Complete before continuing: " + issues.join("; ")); return; }
     setSaving(true);
     setError("");
     try {
@@ -100,7 +96,7 @@ export default function PhysicianOrderForm({ srPacketId, onNext, onBack }: Props
           physicianDate: data.physicianDate ? new Date(data.physicianDate).toISOString() : null,
         }),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) { const problem = await res.json(); throw new Error(problem.error ?? "Could not save. Try again; your entries are still here."); }
       onNext();
     } catch (e) {
       setError(String(e));
@@ -265,9 +261,9 @@ export default function PhysicianOrderForm({ srPacketId, onNext, onBack }: Props
         <div>
           <p className="text-sm font-medium text-gray-700 mb-2">Patient informed of reason for seclusion/restraint and criteria for release:</p>
           <div className="flex gap-4 text-sm">
-            <label className="flex items-center gap-1"><input type="radio" value="yes" {...register("patientInformedYes")} className="accent-blue-700" /> Yes</label>
-            <label className="flex items-center gap-1"><input type="radio" value="no" {...register("patientInformedYes")} className="accent-blue-700" /> No</label>
-            <label className="flex items-center gap-1"><input type="radio" value="na" {...register("patientInformedNA")} className="accent-blue-700" /> NA (Chemical restraint)</label>
+            <label className="flex items-center gap-1"><input type="radio" value="yes" {...register("patientInformed")} className="accent-blue-700" /> Yes</label>
+            <label className="flex items-center gap-1"><input type="radio" value="no" {...register("patientInformed")} className="accent-blue-700" /> No</label>
+            <label className="flex items-center gap-1"><input type="radio" value="na" {...register("patientInformed")} className="accent-blue-700" /> NA (Chemical restraint)</label>
           </div>
         </div>
 
@@ -300,11 +296,11 @@ export default function PhysicianOrderForm({ srPacketId, onNext, onBack }: Props
         </div>
       </SRSection>
 
-      {error && <div className="text-red-700 text-sm bg-red-50 border border-red-200 rounded px-4 py-3 whitespace-pre-line">{error}</div>}
+      {error && <div role="alert" className="text-red-700 text-sm bg-red-50 border border-red-200 rounded px-4 py-3 whitespace-pre-line">{error}</div>}
 
       <div className="flex justify-between">
         <button type="button" onClick={onBack} className={btnSecondary}>← Back</button>
-        <button type="submit" disabled={saving} className={btnPrimary}>{saving ? "Saving…" : "Save & Next →"}</button>
+        <button type="submit" disabled={saving} className={btnPrimary}>{saving ? "Saving…" : "Save & Continue →"}</button>
       </div>
     </form>
   );

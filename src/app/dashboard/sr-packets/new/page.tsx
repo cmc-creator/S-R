@@ -1,6 +1,8 @@
 "use client";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { sectionKeys, sectionIssues, toFormSection } from "@/lib/reports/sections";
 import PatientSelector from "@/components/PatientSelector";
 import PhysicianOrderForm from "@/components/sr/PhysicianOrderForm";
 import FaceToFaceForm from "@/components/sr/FaceToFaceForm";
@@ -26,36 +28,88 @@ function NewSRPacketContent() {
   const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
   const [maxStep, setMaxStep] = useState(0);
-  const [packetId, setPacketId] = useState<string | null>(null);
+  const [packetId, setPacketId] = useState<string | null>(searchParams.get("packetId"));
+  const [initial, setInitial] = useState<Record<string, Record<string, unknown>>>({});
+  const [loading, setLoading] = useState(!!searchParams.get("packetId"));
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [visited, setVisited] = useState<number[]>([]);
+  const [completed, setCompleted] = useState<number[]>([]);
+
   const [patientId, setPatientId] = useState(searchParams.get("patientId") ?? "");
   const incidentId = searchParams.get("incidentId");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+  const [patientLabel, setPatientLabel] = useState("");
+
+  useEffect(() => {
+    const id = searchParams.get("packetId");
+    if (!id) return;
+    let active = true;
+    fetch(`/api/sr-packets/${id}`).then(async res => {
+      if (!res.ok) throw new Error("Could not reopen this packet. Return to the packet and try again.");
+      const packet = await res.json();
+      if (!active) return;
+      if (packet.submittedAt) { router.replace(`/dashboard/sr-packets/${id}`); return; }
+      const values: Record<string, Record<string, unknown>> = {};
+      const done: number[] = [];
+      sectionKeys.forEach((key, i) => {
+        const record = key === "monitoringLogs" ? packet[key][0] : packet[key];
+        if (record) {
+          values[key] = toFormSection(key, record);
+          if (!sectionIssues(key, values[key]).length) done.push(i + 1);
+        }
+      });
+      const firstMissing = sectionKeys.findIndex((_, i) => !done.includes(i + 1));
+      const resume = firstMissing < 0 ? 7 : firstMissing + 1;
+      setInitial(values); setCompleted(done); setVisited([resume]);
+      setPatientLabel(`${packet.patient.fullName} · MRN ${packet.patient.mrn}`);
+      setPatientId(packet.patientId); setStep(resume); setMaxStep(resume); setLoading(false);
+    }).catch(err => { if (active) { setError(err.message); setLoadFailed(true); setLoading(false); } });
+    return () => { active = false; };
+  }, [searchParams, router]);
+
 
   async function createPacket() {
     if (!patientId) { setError("Please select a patient."); return; }
     setCreating(true);
     setError("");
-    const res = await fetch("/api/sr-packets", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ patientId, incidentReportId: incidentId ?? null }),
-    });
-    if (!res.ok) { setError("Failed to create packet."); setCreating(false); return; }
-    const packet = await res.json();
-    setPacketId(packet.id);
-    setStep(1);
-    setMaxStep(1);
-    setCreating(false);
+    try {
+      const res = await fetch("/api/sr-packets", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patientId, incidentReportId: incidentId ?? null }),
+      });
+      if (!res.ok) { const body = await res.json(); throw new Error(body.error ?? "Failed to create packet."); }
+      const packet = await res.json();
+      // Put the durable packet ID in the URL so reload never starts another packet.
+      setLoading(true);
+      router.replace(`/dashboard/sr-packets/new?packetId=${packet.id}`);
+      setPacketId(packet.id); setStep(1); setMaxStep(1); setVisited([1]);
+    } catch (err) { setError(err instanceof Error ? err.message : "Could not create packet. Try again."); }
+    finally { setCreating(false); }
   }
 
   function next() {
     const nextStep = Math.min(step + 1, STEPS.length - 1);
+    setCompleted(done => Array.from(new Set([...done, step])));
+    setVisited(v => Array.from(new Set([...v, nextStep])));
     setMaxStep((m) => Math.max(m, nextStep));
     setStep(nextStep);
   }
-  function prev() { setStep((s) => Math.max(s - 1, 0)); }
+  function prev() { const previous = Math.max(step - 1, 1); setVisited(v => Array.from(new Set([...v, previous]))); setStep(previous); }
   function finish() { router.push(`/dashboard/sr-packets/${packetId}`); }
+
+  if (loading) return <p role="status">Reopening saved packet…</p>;
+  if (loadFailed) return <div role="alert">{error} <Link href="/dashboard/sr-packets">Back to packets</Link></div>;
+  const guidance = [
+    "Confirm the patient. Start from the incident report to link it automatically. Create one packet for this episode.",
+    "Record the actual intervention, reason, start time and order details. Save & Continue stores this section before moving on.",
+    "Document the evaluation time, patient response and practitioner. Enter observed findings; do not guess or prefill clinical answers.",
+    "Record each observation with its time, behavior, intervention and staff initials. Use N/A only when appropriate.",
+    "Document release, total minutes, patient status and RN details.",
+    "Document the patient discussion and prevention plan, or record the patient's refusal without inventing responses.",
+    "Identify the team leader and document the staff debrief. This section is not for the patient record.",
+    "Answer every checklist item honestly (Yes, No or N/A), then review the packet before submitting. This section is not for the patient record.",
+  ];
 
   return (
     <div style={{ maxWidth: 896, margin: "0 auto" }}>
@@ -64,18 +118,25 @@ function NewSRPacketContent() {
         <p style={{ fontSize: "0.875rem", color: "var(--text-3)", marginTop: 4 }}>Seclusion / Physical Hold / Chemical Restraint Documentation</p>
       </div>
 
+      <aside className="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-6 text-sm text-blue-950" aria-live="polite">
+        {patientLabel && <p className="font-semibold mb-2">Patient: {patientLabel}</p>}
+        <p className="font-semibold">Step {step + 1} of {STEPS.length}: {STEPS[step]}</p>
+        <p className="mt-1">{guidance[step]}</p>
+        <p className="mt-2">Save &amp; Continue saves to the server. Back keeps your entries during this visit; unsaved changes are lost if you leave or reload. No patient data is stored in browser storage. Follow facility policy for clinical care and deadlines.</p>
+        {packetId && <Link className="underline mt-2 inline-block" href={`/dashboard/sr-packets/${packetId}`}>Review saved progress / finish later →</Link>}
+      </aside>
       {/* Stepper */}
       <div style={{ display: "flex", overflowX: "auto", gap: 6, marginBottom: 32, paddingBottom: 8 }}>
         {STEPS.map((s, i) => {
           const isActive = i === step;
-          const isDone = i < step && i <= maxStep;
-          const isReachable = i <= maxStep;
+          const isDone = completed.includes(i);
+          const isReachable = i <= maxStep && (!packetId || i > 0);
           return (
           <button
             key={s}
             type="button"
             disabled={!isReachable}
-            onClick={() => isReachable && setStep(i)}
+            onClick={() => { if (isReachable) { setVisited(v => Array.from(new Set([...v, i]))); setStep(i); } }}
             style={{
               flexShrink: 0,
               padding: "6px 12px",
@@ -149,26 +210,40 @@ function NewSRPacketContent() {
         </div>
       )}
 
-      {step === 1 && packetId && (
-        <PhysicianOrderForm srPacketId={packetId} onNext={next} onBack={prev} />
+      {visited.includes(1) && packetId && (
+        <div hidden={step !== 1}>
+          <PhysicianOrderForm initialValues={initial.physicianOrder} srPacketId={packetId} onNext={next} onBack={prev} />
+        </div>
       )}
-      {step === 2 && packetId && (
-        <FaceToFaceForm srPacketId={packetId} onNext={next} onBack={prev} />
+      {visited.includes(2) && packetId && (
+        <div hidden={step !== 2}>
+          <FaceToFaceForm initialValues={initial.faceToFaceEval} srPacketId={packetId} onNext={next} onBack={prev} />
+        </div>
       )}
-      {step === 3 && packetId && (
-        <MonitoringLogForm srPacketId={packetId} onNext={next} onBack={prev} />
+      {visited.includes(3) && packetId && (
+        <div hidden={step !== 3}>
+          <MonitoringLogForm initialValues={initial.monitoringLogs} srPacketId={packetId} onNext={next} onBack={prev} />
+        </div>
       )}
-      {step === 4 && packetId && (
-        <TerminationForm srPacketId={packetId} onNext={next} onBack={prev} />
+      {visited.includes(4) && packetId && (
+        <div hidden={step !== 4}>
+          <TerminationForm initialValues={initial.terminationSummary} srPacketId={packetId} onNext={next} onBack={prev} />
+        </div>
       )}
-      {step === 5 && packetId && (
-        <PatientDebriefingForm srPacketId={packetId} onNext={next} onBack={prev} />
+      {visited.includes(5) && packetId && (
+        <div hidden={step !== 5}>
+          <PatientDebriefingForm initialValues={initial.patientDebriefing} srPacketId={packetId} onNext={next} onBack={prev} />
+        </div>
       )}
-      {step === 6 && packetId && (
-        <StaffDebriefingForm srPacketId={packetId} onNext={next} onBack={prev} />
+      {visited.includes(6) && packetId && (
+        <div hidden={step !== 6}>
+          <StaffDebriefingForm initialValues={initial.staffDebriefing} srPacketId={packetId} onNext={next} onBack={prev} />
+        </div>
       )}
-      {step === 7 && packetId && (
-        <AfterActionForm srPacketId={packetId} onNext={finish} onBack={prev} />
+      {visited.includes(7) && packetId && (
+        <div hidden={step !== 7}>
+          <AfterActionForm initialValues={initial.afterActionCritique} srPacketId={packetId} onNext={finish} onBack={prev} />
+        </div>
       )}
     </div>
   );
