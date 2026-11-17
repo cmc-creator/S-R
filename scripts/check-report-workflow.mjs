@@ -1,0 +1,111 @@
+// Focused reproduction; no database, network, or patient records required.
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import Module, { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
+const nativeRequire = createRequire(import.meta.url);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import ts from 'typescript';
+const root = path.resolve(__dirname, '..');
+function load(file, mocks = {}) {
+  const filename = path.join(root, file);
+  const m = new Module(filename);
+  m.filename = filename; m.paths = Module._nodeModulePaths(path.dirname(filename));
+  m.require = name => {
+    if (name in mocks) return mocks[name];
+    if (name.startsWith('@/')) return load('src/' + name.slice(2) + '.ts', mocks);
+    if (name.startsWith('.')) return load(path.relative(root, path.resolve(path.dirname(filename), name)) + '.ts', mocks);
+    return nativeRequire(name);
+  };
+  m._compile(ts.transpileModule(fs.readFileSync(filename, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX } }).outputText, filename);
+  return m.exports;
+}
+const { sectionIssues, toStoredSection, toFormSection } = load('src/lib/reports/sections.ts');
+const { incidentIssues } = load('src/lib/reports/incident.ts');
+const when = '2026-01-01';
+const examples = {
+  physicianOrder: { isPhysicalRestraint: true, physRestDate: when, physRestStartTime: '12:00', reasonDescription: 'Synthetic example', nurseName: 'Test Nurse', nurseDate: when, nurseTime: '12:00', physicianName: 'Test Provider', physicianDate: when, physicianTime: '12:00', medicalConditionContraindication: 'false' },
+  faceToFaceEval: { evalDate: when, evalTime: '12:00', patientResponse: 'Synthetic response', practitionerName: 'Test Provider', unstableMedical: 'false' },
+  monitoringLogs: { logDate: when, entries: [{ militaryTime: '12:00', behaviorCode: 'K', interventionCode: '16', staffInitials: 'TN' }] },
+  terminationSummary: { physRestTimeIn: '12:00', physRestTimeOut: '12:10', totalMinutes: '10', behavioralStatus: 'Synthetic status', rnName: 'Test Nurse', rnDate: when, rnTime: '12:10', complaintsOfInjury: 'false', familyNotified: 'false', familyNotifiedExplanation: 'Synthetic explanation' },
+  patientDebriefing: { debriefDate: when, debriefTime: '12:00', rnName: 'Test Nurse', patientRefused: true, isPhysicalRestraint: true },
+  staffDebriefing: { debriefDate: when, debriefTime: '12:00', staffRows: [{ name: 'Test Leader', credentials: 'RN' }], q1: 'Synthetic opportunity', cpiResponses: Array.from({ length: 8 }, () => ({ answer: 'NA' })) },
+  afterActionCritique: { completedByName: 'Test Supervisor', completedByDate: when, checklist: Array.from({ length: 21 }, () => ({ answer: 'NO', comments: 'Synthetic comment' })) },
+};
+for (const [key, example] of Object.entries(examples)) {
+  assert.ok(sectionIssues(key, {}).length, `${key} must not accept an empty section`);
+  assert.deepEqual(sectionIssues(key, example), [], key);
+  const roundtrip = toFormSection(key, toStoredSection(key, example));
+  assert.deepEqual(sectionIssues(key, roundtrip), [], `${key} must remain complete when reopened`);
+}
+for (const informed of ['yes', 'no', 'na', '']) {
+  const stored = toStoredSection('physicianOrder', { patientInformed: informed });
+  assert.equal(stored.patientInformedYes, informed === 'yes' ? true : informed === 'no' ? false : null);
+  assert.equal(toFormSection('physicianOrder', stored).patientInformed, informed);
+}
+assert.equal(toStoredSection('terminationSummary' , examples.terminationSummary).familyNotifiedNoReason, 'Synthetic explanation');
+assert.equal(toFormSection('staffDebriefing', toStoredSection('staffDebriefing', examples.staffDebriefing)).q1, 'Synthetic opportunity');
+assert.ok(sectionIssues('monitoringLogs', { logDate: when, entries: [{ militaryTime: '12:00' }] }).length);
+assert.deepEqual(sectionIssues('monitoringLogs', { logDate: when, notApplicable: true }), []);
+assert.ok(sectionIssues('physicianOrder', { ...examples.physicianOrder, isTelephoneOrder: true, isReadBack: false }).length);
+assert.ok(sectionIssues('afterActionCritique', { ...examples.afterActionCritique, checklist: [{ answer: 'YES' }] }).length);
+const incident = { patientId: 'synthetic', reporterName: 'Test', incidentDate: when, incidentTime: '12:00', unit: 'Test', location: 'Hallway', summaryOfEvent: 'Synthetic event', signature: 'synthetic', categories: ['16'], noOtherWitnesses: true, nursingAssessmentNA: true, interventionsNA: true, notificationsNA: true };
+assert.deepEqual(incidentIssues(incident), []);
+assert.ok(incidentIssues({ ...incident, signature: '' }).length);
+assert.ok(incidentIssues({ ...incident, location: 'Other' }).length);
+assert.ok(incidentIssues({ ...incident, notificationsNA: false, notifications: [{ name: 'Test' }] }).length);
+assert.ok(incidentIssues({ ...incident, nursingAssessmentNA: false }).length);
+
+async function main() {
+  const packet = { id: 'synthetic', submittedAt: null };
+  const prisma = { $queryRaw: async () => [], sRPacket: { findUnique: async () => packet } };
+  const { prepareSection } = load('src/lib/reports/save-section.ts', { '@/lib/prisma': { prisma } });
+  const models = { physicianOrder: 'SRPhysicianOrder', faceToFaceEval: 'SRFaceToFaceEvaluation', monitoringLogs: 'SRMonitoringLog', terminationSummary: 'SRTerminationSummary', patientDebriefing: 'SRPatientDebriefing', staffDebriefing: 'SRStaffDebriefing', afterActionCritique: 'SRAfterActionCritique' };
+  for (const [key, example] of Object.entries(examples)) {
+    const result = await prepareSection(new Request('https://example.invalid', { method: 'POST', body: JSON.stringify({ ...example, srPacketId: 'synthetic', id: 'untrusted', completedById: 'untrusted', patient: { connect: {} } }) }), key, models[key], prisma);
+    assert.equal(result.error, undefined, key);
+    assert.equal(result.data.id, undefined);
+    assert.equal(result.data.completedById, undefined);
+    assert.equal(result.data.patient, undefined);
+  }
+  packet.submittedAt = new Date();
+  const locked = await prepareSection(new Request('https://example.invalid', { method: 'POST', body: JSON.stringify({ ...examples.physicianOrder, srPacketId: packet.id }) }), 'physicianOrder', 'SRPhysicianOrder', prisma);
+  assert.equal(locked.error.status, 409);
+  let session = null, deleted = 0;
+  const tx = { incidentReport: { findUnique: async () => ({ _count: { srPackets: 0 } }), delete: async () => { deleted++; } }, sRPacket: { findUnique: async () => packet, delete: async () => { deleted++; } } };
+  for (const model of ['sRMonitoringEntry', 'sRMonitoringLog', 'sRPhysicianOrder', 'sRFaceToFaceEvaluation', 'sRTerminationSummary', 'sRPatientDebriefing', 'sRStaffDebriefing', 'sRAfterActionCritique']) tx[model] = { deleteMany: async () => {} };
+  const { deleteReport } = load('src/lib/reports/delete-report.ts', { '@/lib/auth': { auth: async () => session }, '@/lib/prisma': { prisma: { $transaction: async fn => fn(tx) } } });
+  assert.equal((await deleteReport('incident', 'synthetic')).status, 401);
+  session = { user: { role: 'STAFF' } };
+  assert.equal((await deleteReport('incident', 'synthetic')).status, 403);
+  session.user.role = 'SUPERVISOR';
+  assert.equal((await deleteReport('packet', 'synthetic')).status, 409);
+  packet.submittedAt = null;
+  assert.equal((await deleteReport('packet', 'synthetic')).status, 204);
+  assert.equal(deleted, 1);
+  tx.incidentReport.findUnique = async () => ({ _count: { srPackets: 1 } });
+  assert.equal((await deleteReport('incident', 'synthetic')).status, 409);
+  tx.incidentReport.findUnique = async () => ({ _count: { srPackets: 0 }, supervisorSignature: 'signed' });
+  assert.equal((await deleteReport('incident', 'synthetic')).status, 409);
+  tx.incidentReport.findUnique = async () => ({ _count: { srPackets: 0 }, qmComments: 'review in progress' });
+  assert.equal((await deleteReport('incident', 'synthetic')).status, 409);
+  assert.equal(deleted, 1);
+  const syntheticPacket = {
+    id: 'synthetic', createdAt: new Date(when), submittedAt: null,
+    patient: { fullName: 'Synthetic Patient', mrn: 'TEST-ONLY', dob: new Date(when) },
+    createdBy: { name: 'Synthetic Staff' },
+    ...Object.fromEntries(Object.entries(examples).map(([key, value]) => [key, key === 'monitoringLogs' ? [toStoredSection(key, value)] : toStoredSection(key, value)])),
+  };
+  const { default: PrintPage } = load('src/app/dashboard/sr-packets/[id]/print/page.tsx', {
+    '@/lib/auth': { auth: async () => session },
+    '@/lib/prisma': { prisma: { sRPacket: { findUnique: async () => syntheticPacket } } },
+    './PrintButton': { default: () => null },
+  });
+  const { renderToStaticMarkup } = nativeRequire('react-dom/server');
+  const html = renderToStaticMarkup(await PrintPage({ params: Promise.resolve({ id: 'synthetic' }), searchParams: Promise.resolve({}) }));
+  for (const content of ['Synthetic Patient', 'TEST-ONLY', 'DRAFT', 'DO NOT FILE IN PATIENT RECORD', 'Synthetic opportunity', 'Synthetic comment', 'Patient was an immediate risk', 'Military Time']) assert.ok(html.includes(content), `Printed packet must contain ${content}`);
+  console.log('PASS: printed saved values and checklist wording');
+  console.log('PASS: section validation, save/reopen mappings, API field filtering, incident hard stops, submitted locks, deletion permissions and protected records');
+}
+main().catch(err => { console.error(err); process.exitCode = 1; });

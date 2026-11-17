@@ -22,6 +22,11 @@ export async function POST(req: Request) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
+  if (!body.patientId || !await prisma.patient.findUnique({ where: { id: body.patientId } })) return NextResponse.json({ error: "Select a valid patient" }, { status: 400 });
+  if (body.incidentReportId) {
+    const incident = await prisma.incidentReport.findUnique({ where: { id: body.incidentReportId } });
+    if (!incident || incident.patientId !== body.patientId) return NextResponse.json({ error: "The linked incident must belong to the selected patient" }, { status: 400 });
+  }
   const packet = await prisma.sRPacket.create({
     data: {
       patientId: body.patientId,

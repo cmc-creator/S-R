@@ -1,3 +1,5 @@
+import { DeleteReportButton } from "@/components/ReportActions";
+import { sectionKeys, sectionIssues, toFormSection } from "@/lib/reports/sections";
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -25,7 +27,7 @@ function SectionStatus({ label, complete }: { label: string; complete: boolean }
         <span className="font-medium">{label}</span>
       </div>
       <span className={`text-xs font-semibold ${complete ? "text-emerald-600" : "text-slate-400"}`}>
-        {complete ? "Complete" : "Incomplete"}
+        {complete ? "Complete" : "Needs attention"}
       </span>
     </div>
   );
@@ -68,6 +70,11 @@ export default async function SRPacketDetailPage({ params }: { params: Promise<{
     { label: "After Action Critique", complete: !!packet.afterActionCritique },
   ];
 
+  sections.forEach((section, index) => {
+    const key = sectionKeys[index];
+    const record = key === "monitoringLogs" ? packet.monitoringLogs[0] : packet[key];
+    section.complete = !!record && !sectionIssues(key, toFormSection(key, JSON.parse(JSON.stringify(record)))).length;
+  });
   const totalComplete = sections.filter((s) => s.complete).length;
   const isFullyComplete = totalComplete === sections.length;
 
@@ -85,10 +92,11 @@ export default async function SRPacketDetailPage({ params }: { params: Promise<{
           <p className="text-sm text-gray-500 font-mono mt-1">{packet.id}</p>
         </div>
         <div className="flex gap-2 items-start flex-wrap">
+          {!packet.submittedAt && ["ADMIN", "SUPERVISOR"].includes(session.user.role) && <DeleteReportButton kind="sr-packets" id={packet.id} />}
           {isFullyComplete && !packet.submittedAt && (
             <SubmitPacketButton packetId={packet.id} />
           )}
-          {(isFullyComplete || packet.submittedAt) && (
+          {(
             <Link
               href={`/dashboard/sr-packets/${packet.id}/print`}
               className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition flex items-center gap-1.5"
@@ -96,14 +104,14 @@ export default async function SRPacketDetailPage({ params }: { params: Promise<{
               🖨 Print / View
             </Link>
           )}
-          {(isFullyComplete || packet.submittedAt) && (
+          {(
             <a
               href={`/dashboard/sr-packets/${packet.id}/print?autoprint=1`}
               target="_blank"
               rel="noopener noreferrer"
               className="border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-4 py-2 rounded-lg text-sm transition flex items-center gap-1.5"
             >
-              ↓ Download PDF
+              Print / Save as PDF
             </a>
           )}
           {!packet.submittedAt && (

@@ -201,3 +201,19 @@ option { background: var(--bg-elevated); color: var(--text); }
 .bg-purple-50       { background: rgba(147,51,234,0.08) !important; }
 .border-purple-100  { border-color: rgba(147,51,234,0.20) !important; }
 .text-purple-700    { color: #a855f7 !important; }
+
+.print-only { display: none; }
+@media print {
+  :root, .dark {
+    --bg: white; --bg-elevated: white; --bg-subtle: #f3f4f6;
+    --text: #111827; --text-2: #1f2937; --text-3: #374151;
+    --border: #9ca3af; --border-subtle: #d1d5db; --gold: #1f2937;
+    color-scheme: light;
+  }
+  .print-only { display: block !important; }
+  nav, header, footer, .no-print { display: none !important; }
+  body, main { background: white !important; color: black !important; }
+  main { max-width: none !important; padding: 0 !important; }
+  button, input, textarea, select { print-color-adjust: exact; }
+  img { break-inside: avoid; }
+}

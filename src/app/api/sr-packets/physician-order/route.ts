@@ -1,16 +1,21 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { prepareSection } from "@/lib/reports/save-section";
 
-// POST or PATCH physician order for an SR packet
 export async function POST(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const body = await req.json();
-  const order = await prisma.sRPhysicianOrder.upsert({
-    where: { srPacketId: body.srPacketId },
-    update: body,
-    create: { ...body, physicianId: session.user.id },
+  return prisma.$transaction(async tx => {
+    const result = await prepareSection(req, "physicianOrder", "SRPhysicianOrder", tx);
+    if (result.error) return result.error;
+    const data = result.data as unknown as Prisma.SRPhysicianOrderUncheckedCreateInput;
+    const record = await tx.sRPhysicianOrder.upsert({
+      where: { srPacketId: result.packet.id },
+      update: data,
+      create: { ...data, physicianId: session.user.id },
+    });
+    return NextResponse.json(record);
   });
-  return NextResponse.json(order);
 }

@@ -1,3 +1,4 @@
+import { incidentIssues } from "@/lib/reports/incident";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -20,6 +21,8 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
+    const issues = incidentIssues(body);
+    if (issues.length) return NextResponse.json({ error: "Complete before submitting: " + issues.join("; ") }, { status: 400 });
     const { patientId, ...data } = body;
 
     const report = await prisma.incidentReport.create({

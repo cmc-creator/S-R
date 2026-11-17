@@ -1,31 +1,10 @@
 "use client";
+import { sectionIssues } from "@/lib/reports/sections";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { SRSection, SRField, inp, inpError, btnPrimary, btnSecondary } from "./PhysicianOrderForm";
 
-const CHECKLIST_ITEMS: { num: number; text: string }[] = [
-  { num: 1, text: "Patient was an immediate risk to physical safety of self or others" },
-  { num: 2, text: "A Code Support was called" },
-  { num: 3, text: "Physician order(s) obtained (complete)" },
-  { num: 4, text: "In-person evaluation conducted by RN or Physician within one hour" },
-  { num: 5, text: "Attending/covering physician provided in-person evaluation information" },
-  { num: 6, text: "Documentation indicates that less restrictive measures failed or were not appropriate" },
-  { num: 7, text: "All personal items which could be used for self-harm are removed" },
-  { num: 8, text: "1:1 Personal restraint observation was conducted every 15 minutes" },
-  { num: 9, text: "Correct CPI techniques were used" },
-  { num: 10, text: "Staff in the area participated in the event as needed" },
-  { num: 11, text: "Patient was monitored in-person throughout the physical restraint/seclusion episode" },
-  { num: 12, text: "Required interventions were provided and documented on the 1:1 S/R Observation & Monitoring form" },
-  { num: 13, text: "The patient was released from restraint when criteria for release or early release were met" },
-  { num: 14, text: "Documentation reflects timely reassessment and justification; order obtained from Physician to continue if applicable" },
-  { num: 15, text: "Patient's family or legal representative notified, as applicable" },
-  { num: 16, text: "Patient debriefed" },
-  { num: 17, text: "Staff Team debriefing with staff involved" },
-  { num: 18, text: "Patient Injury" },
-  { num: 19, text: "Staff Injury" },
-  { num: 20, text: "Incident report completed" },
-  { num: 21, text: "Camera review completed by Risk Management" },
-];
+import { CHECKLIST_ITEMS } from "@/lib/reports/questions";
 
 type ChecklistEntry = { answer: "YES" | "NO" | "NA" | ""; comments: string };
 type FormValues = {
@@ -37,23 +16,22 @@ type FormValues = {
   reviewedByDate: string;
 };
 
-interface Props { srPacketId: string; onNext: () => void; onBack: () => void; }
+interface Props { srPacketId: string; onNext: () => void; onBack: () => void; initialValues?: Record<string, unknown>; }
 
-export default function AfterActionForm({ srPacketId, onNext, onBack }: Props) {
+export default function AfterActionForm({ srPacketId, onNext, onBack, initialValues }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+    values: initialValues as FormValues | undefined,
     defaultValues: {
       checklist: CHECKLIST_ITEMS.map(() => ({ answer: "", comments: "" })),
     },
   });
 
   async function onSubmit(data: FormValues) {
-    const missing: string[] = [];
-    const unanswered = data.checklist?.filter((c) => !c.answer);
-    if (unanswered?.length > 0) missing.push(`All 21 checklist items must be answered (${unanswered.length} unanswered)`);
-    if (missing.length > 0) { setError("Please complete required fields:\n• " + missing.join("\n• ")); return; }
+    const issues = sectionIssues("afterActionCritique", data);
+    if (issues.length) { setError("Complete before continuing: " + issues.join("; ")); return; }
     setSaving(true);
     setError("");
     try {
@@ -67,7 +45,7 @@ export default function AfterActionForm({ srPacketId, onNext, onBack }: Props) {
           reviewedByDate: data.reviewedByDate ? new Date(data.reviewedByDate).toISOString() : null,
         }),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) { const problem = await res.json(); throw new Error(problem.error ?? "Could not save. Try again; your entries are still here."); }
       onNext();
     } catch (e) {
       setError(String(e));
@@ -137,7 +115,7 @@ export default function AfterActionForm({ srPacketId, onNext, onBack }: Props) {
         </div>
       </SRSection>
 
-      {error && <div className="text-red-700 text-sm bg-red-50 border border-red-200 rounded px-4 py-3 whitespace-pre-line">{error}</div>}
+      {error && <div role="alert" className="text-red-700 text-sm bg-red-50 border border-red-200 rounded px-4 py-3 whitespace-pre-line">{error}</div>}
 
       <div className="flex justify-between">
         <button type="button" onClick={onBack} className={btnSecondary}>← Back</button>
