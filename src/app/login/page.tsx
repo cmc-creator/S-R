@@ -166,6 +166,7 @@ export default function LoginPage() {
               </form>
           </div>
 
+          <details className="account-recovery-help"><summary>Forgot your password?</summary><p>Contact your facility administrator. After verifying your identity, an administrator can reset your password from Administration. Email reset links are not enabled. Never send passwords in support messages.</p></details>
           <p className="suite-login-privacy">Patient information is confidential.<br />Only access records you are authorized to use.</p>
           </div>
         </main>

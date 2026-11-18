@@ -1,3 +1,4 @@
+import { passwordVersion } from "@/lib/account/password";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
@@ -12,7 +13,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (typeof credentials?.email !== "string" || typeof credentials?.password !== "string" || credentials.password.length > 1000) return null;
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email as string },
@@ -28,6 +29,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!passwordMatch) return null;
 
         return {
+          passwordVersion: passwordVersion(user.password),
           id: user.id,
           name: user.name,
           email: user.email,
@@ -39,13 +41,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
+        token.passwordVersion = user.passwordVersion;
         token.id = user.id;
         token.role = (user as { role: Role }).role;
         token.title = (user as { title?: string }).title;
         token.unit = (user as { unit?: string }).unit;
       }
+      // Recheck current credentials and role so password resets revoke every session.
+      if (typeof token.id !== "string" || typeof token.passwordVersion !== "string") return null;
+      const current = await prisma.user.findUnique({ where: { id: token.id }, select: { password: true, name: true, email: true, role: true, title: true, unit: true } });
+      if (!current || passwordVersion(current.password) !== token.passwordVersion) return null;
+      token.role = current.role; token.name = current.name; token.email = current.email;
+      token.title = current.title ?? undefined; token.unit = current.unit ?? undefined;
       return token;
     },
     session({ session, token }) {

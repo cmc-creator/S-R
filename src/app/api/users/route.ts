@@ -1,3 +1,4 @@
+import { passwordError } from "@/lib/account/password";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
@@ -17,6 +18,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const session = await auth();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!["ADMIN", "SUPERVISOR"].includes(session.user.role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   try {
     const { name, email, password, role, title, unit } = await req.json();
 
@@ -24,6 +28,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    const invalid = passwordError(password);
+    if (invalid) return NextResponse.json({ error: invalid }, { status: 400 });
+    if (role && !Object.values(Role).includes(role)) return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    if (session.user.role !== "ADMIN" && role && role !== "STAFF" && role !== "PROVIDER") return NextResponse.json({ error: "Only administrators may create administrators or supervisors" }, { status: 403 });
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       return NextResponse.json({ error: "Email already in use" }, { status: 409 });

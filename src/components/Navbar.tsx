@@ -14,6 +14,7 @@ export default function Navbar({ user }: Props) {
     { href: "/dashboard", label: "Overview", icon: "overview", active: pathname === "/dashboard" },
     { href: "/dashboard/sr-packets/new", label: "Create packet", icon: "plus", active: pathname === "/dashboard/sr-packets/new" },
     { href: "/dashboard/sr-packets", label: "Packet library", icon: "layers", active: pathname.startsWith("/dashboard/sr-packets") && pathname !== "/dashboard/sr-packets/new" },
+    { href: "/dashboard/account", label: "Account & security", icon: "settings", active: pathname.startsWith("/dashboard/account") },
     ...((user.role === Role.ADMIN || user.role === Role.SUPERVISOR) ? [
       { href: "/dashboard/analytics", label: "Quality & insights", icon: "chart" as const, active: pathname.startsWith("/dashboard/analytics") },
       { href: "/dashboard/admin", label: "Administration", icon: "settings" as const, active: pathname.startsWith("/dashboard/admin") },
