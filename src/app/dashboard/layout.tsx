@@ -6,11 +6,5 @@ import Footer from "@/components/Footer";
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session) redirect("/login");
-  return (
-    <div className="flex flex-col min-h-screen" style={{ background: "var(--bg)" }}>
-      <Navbar user={session.user} />
-      <main className="flex-1 max-w-7xl w-full mx-auto px-5 py-8">{children}</main>
-      <Footer />
-    </div>
-  );
+  return <div className="suite-shell"><Navbar user={session.user} /><div className="suite-main-column"><main id="workspace-content" className="suite-main" tabIndex={-1}>{children}</main><Footer /></div></div>;
 }

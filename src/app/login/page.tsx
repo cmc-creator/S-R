@@ -3,7 +3,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { SRSuiteMark, SRSuiteLockup } from "@/components/SRSuiteLogo";
+import { SRSuiteLockup } from "@/components/SRSuiteLogo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,74 +26,23 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{ background: "var(--bg)", color: "var(--text)" }}
-    >
-      {/* Top bar */}
-      <header className="flex items-center justify-between px-6 py-4 md:px-10">
-        <SRSuiteLockup size={26} />
-        <ThemeToggle />
-      </header>
-
-      {/* Main */}
-      <main className="flex-1 flex items-center justify-center px-4 pb-20">
-        <div style={{ width: "100%", maxWidth: 360 }}>
-
-          {/* Brand mark */}
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <div style={{ display: "flex", justifyContent: "center", margin: "0 auto 20px" }}>
-              <SRSuiteMark size={56} />
-            </div>
-            <p
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                letterSpacing: "0.14em",
-                color: "var(--gold)",
-                textTransform: "uppercase",
-                marginBottom: 10,
-              }}
-            >
-              Seclusion &amp; Restraint Platform
-            </p>
-            <h1
-              style={{
-                fontSize: 28,
-                fontWeight: 700,
-                letterSpacing: "-0.025em",
-                color: "var(--text)",
-                margin: 0,
-              }}
-            >
-              Sign in
-            </h1>
-            <p style={{ fontSize: 14, color: "var(--text-2)", marginTop: 6 }}>
-              Access your documentation portal
-            </p>
-          </div>
-
-          {/* Form card */}
-          <div
-            style={{
-              background: "var(--bg-elevated)",
-              border: "1px solid var(--border)",
-              borderRadius: 12,
-              overflow: "hidden",
-            }}
-          >
-            {/* Gold accent line */}
-            <div
-              style={{
-                height: 1,
-                background: "linear-gradient(90deg, transparent 0%, var(--gold) 40%, var(--gold) 60%, transparent 100%)",
-              }}
-            />
-
-            <div style={{ padding: "28px 28px 32px" }}>
+    <div className="suite-login">
+      <section className="suite-login-story" aria-label="SR Suite documentation workspace">
+        <div className="suite-login-brand"><SRSuiteLockup size={38} /><span>THE DOCUMENTATION WORKSPACE</span></div>
+        <div className="suite-login-editorial"><p className="suite-eyebrow">CONSIDERED SOFTWARE. ESSENTIAL WORK.</p><h1>Clarity in the<br /><em>moments that matter.</em></h1><p>A focused workspace for seclusion and restraint documentation. Designed to bring structure to the details, and confidence to your day.</p><div className="suite-login-divider" /><span>01 — DOCUMENT WITH PURPOSE<br />02 — KEEP EVERY DETAIL CONNECTED<br />03 — REVIEW WITH CARE</span></div>
+        <p className="suite-login-story-footer">SR SUITE <span> / </span> DESTINY SPRINGS</p>
+        <div className="suite-login-orbit" aria-hidden="true" />
+      </section>
+      <section className="suite-login-access" aria-labelledby="login-title">
+        <div className="suite-login-toolbar"><span>STAFF ACCESS</span><ThemeToggle /></div>
+        <main className="suite-login-form-area">
+          <div className="suite-login-form">
+            <p className="suite-eyebrow">WELCOME TO YOUR WORKSPACE</p><h2 id="login-title">Welcome back.</h2><p className="suite-login-subtitle">Sign in to continue your documentation.</p>
+            <div className="suite-login-form-card">
               <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom: 18 }}>
                   <label
+                    htmlFor="login-email"
                     style={{
                       display: "block",
                       fontSize: 11,
@@ -107,6 +56,7 @@ export default function LoginPage() {
                     Email
                   </label>
                   <input
+                    id="login-email"
                     type="email"
                     required
                     autoComplete="email"
@@ -128,6 +78,7 @@ export default function LoginPage() {
 
                 <div style={{ marginBottom: 22 }}>
                   <label
+                    htmlFor="login-password"
                     style={{
                       display: "block",
                       fontSize: 11,
@@ -141,6 +92,7 @@ export default function LoginPage() {
                     Password
                   </label>
                   <input
+                    id="login-password"
                     type="password"
                     required
                     autoComplete="current-password"
@@ -160,7 +112,7 @@ export default function LoginPage() {
                 </div>
 
                 {error && (
-                  <div
+                  <div role="alert"
                     style={{
                       background: "var(--danger-bg)",
                       border: "1px solid var(--danger-border)",
@@ -212,29 +164,13 @@ export default function LoginPage() {
                   )}
                 </button>
               </form>
-            </div>
           </div>
 
-          <p
-            style={{
-              textAlign: "center",
-              fontSize: 11,
-              color: "var(--text-3)",
-              marginTop: 20,
-              letterSpacing: "0.02em",
-            }}
-          >
-            &copy; {new Date().getFullYear()} NyxCollective LLC &mdash; SR Suite&#8482;&ensp;&middot;&ensp;
-            <a href="/terms" style={{ color: "inherit", textDecoration: "underline" }}>Terms</a>
-            &ensp;&middot;&ensp;
-            <a href="/privacy" style={{ color: "inherit", textDecoration: "underline" }}>Privacy</a>
-          </p>
-        </div>
-      </main>
-
-      <style>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
+          <p className="suite-login-privacy">Patient information is confidential.<br />Only access records you are authorized to use.</p>
+          </div>
+        </main>
+        <div className="suite-login-legal">&copy; {new Date().getFullYear()} NyxCollective LLC · SR Suite™<div><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div></div>
+      </section>
     </div>
   );
 }

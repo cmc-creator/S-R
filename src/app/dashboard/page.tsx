@@ -1,5 +1,6 @@
 import { DeleteReportButton } from "@/components/ReportActions";
 import { canDeletePacket } from "@/lib/reports/packet-permissions";
+import InterfaceIcon, { type IconName } from "@/components/InterfaceIcon";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
@@ -7,300 +8,26 @@ import { format } from "date-fns";
 
 export default async function DashboardPage() {
   const session = await auth();
-
   let recentPackets: Awaited<ReturnType<typeof prisma.sRPacket.findMany<{ include: { patient: true } }>>> = [];
-  let srCount = 0;
+  let total = 0, drafts = 0, submitted = 0;
+  let unavailable = false;
   try {
-    [recentPackets, srCount] = await Promise.all([
-      prisma.sRPacket.findMany({
-        take: 10,
-        orderBy: { createdAt: "desc" },
-        include: { patient: true },
-      }),
-      prisma.sRPacket.count(),
+    [recentPackets, total, drafts, submitted] = await Promise.all([
+      prisma.sRPacket.findMany({ take: 10, orderBy: { createdAt: "desc" }, include: { patient: true } }),
+      prisma.sRPacket.count(), prisma.sRPacket.count({ where: { submittedAt: null } }), prisma.sRPacket.count({ where: { submittedAt: { not: null } } }),
     ]);
-  } catch {
-    // DB not available locally
-  }
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
-
-      {/* Page header */}
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.10em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 6 }}>
-            {format(new Date(), "EEEE, MMMM d, yyyy")}
-          </p>
-          <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", margin: 0 }}>
-            Welcome back, {session?.user.name?.split(" ")[0]}
-          </h1>
-        </div>
-        <Link
-          href="/dashboard/sr-packets/new"
-          style={{
-            background: "var(--accent)",
-            color: "var(--accent-fg)",
-            fontSize: 13,
-            fontWeight: 600,
-            padding: "9px 16px",
-            borderRadius: 8,
-            textDecoration: "none",
-            letterSpacing: "0.01em",
-            transition: "opacity 0.15s",
-            whiteSpace: "nowrap",
-          }}
-        >
-          + New S&amp;R Packet
-        </Link>
-      </div>
-
-      {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14 }}>
-        <StatCard
-          label="Total S&R Packets"
-          value={srCount}
-          icon={
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          }
-        />
-      </div>
-
-      {/* Quick actions */}
-      <div>
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.10em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 12 }}>
-          Quick Actions
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
-          <ActionCard
-            href="/dashboard/sr-packets/new"
-            title="New S&R Packet"
-            description="Start a new Seclusion/Restraint documentation"
-            icon={
-              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-            }
-          />
-          <ActionCard
-            href="/dashboard/sr-packets"
-            title="View All Packets"
-            description="Browse and manage existing S&R records"
-            icon={
-              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-              </svg>
-            }
-          />
-        </div>
-      </div>
-
-      {/* Recent packets */}
-      <div>
-        <div
-          style={{
-            background: "var(--bg-elevated)",
-            border: "1px solid var(--border)",
-            borderRadius: 12,
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "14px 20px",
-              borderBottom: "1px solid var(--border)",
-              background: "var(--bg-subtle)",
-            }}
-          >
-            <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: 0 }}>
-              Recent S&amp;R Packets
-            </p>
-            <Link
-              href="/dashboard/sr-packets"
-              style={{ fontSize: 12, fontWeight: 500, color: "var(--gold)", textDecoration: "none" }}
-            >
-              View all →
-            </Link>
-          </div>
-
-          {recentPackets.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "56px 20px" }}>
-              <svg
-                width="36"
-                height="36"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-                style={{ color: "var(--text-3)", margin: "0 auto 12px" }}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <p style={{ fontSize: 14, color: "var(--text-2)", marginBottom: 8 }}>No S&amp;R packets yet</p>
-              <Link
-                href="/dashboard/sr-packets/new"
-                style={{ fontSize: 13, color: "var(--gold)", textDecoration: "none" }}
-              >
-                Create your first packet →
-              </Link>
-            </div>
-          ) : (
-            <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-              {recentPackets.map((p, i) => (
-                <li
-                  key={p.id}
-                  className="recent-packet-row"
-                  style={{ borderBottom: i < recentPackets.length - 1 ? "1px solid var(--border-subtle)" : "none" }}
-                >
-                  <Link
-                    href={`/dashboard/sr-packets/${p.id}`}
-                    style={{
-                      display: "flex",
-                      flex: 1, minWidth: 0, gap: 16, flexWrap: "wrap",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "13px 20px",
-                      textDecoration: "none",
-                      transition: "background 0.12s",
-                    }}
-                    className="hover:bg-[var(--bg-hover)]"
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <div
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: "50%",
-                          background: "var(--gold-faint)",
-                          border: "1px solid var(--border)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 11,
-                          fontWeight: 700,
-                          color: "var(--gold)",
-                          flexShrink: 0,
-                        }}
-                      >
-                        {p.patient.fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
-                      </div>
-                      <div>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: 0 }}>
-                          {p.patient.fullName}
-                        </p>
-                        <p style={{ fontSize: 11, color: "var(--text-3)", margin: "2px 0 0" }}>
-                          MRN {p.patient.mrn}
-                        </p>
-                      </div>
-                    </div>
-                    <span style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 500 }}>
-                      {format(new Date(p.createdAt), "MMM d, yyyy")}
-                    </span>
-                  </Link>
-                  <div className="recent-packet-actions">
-                    {p.submittedAt ? <span className="text-xs text-gray-500">Submitted · protected</span> : session && canDeletePacket(session.user, p) ?
-                      <DeleteReportButton kind="sr-packets" id={p.id} stayOnPage description={`${p.patient.fullName} · MRN ${p.patient.mrn} · ${format(new Date(p.createdAt), "MMM d, yyyy h:mm a")}`} /> :
-                      <span className="text-xs text-gray-500">Draft · owner/admin deletion only</span>}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  } catch { unavailable = true; }
+  const firstDraft = recentPackets.find(p => !p.submittedAt);
+  return <div className="executive-dashboard">
+    <div className="suite-page-heading"><div><p className="suite-eyebrow">Your daily workspace <span> / </span> {format(new Date(), "MMM dd, yyyy")}</p><h1>Good to see you, {session?.user.name?.split(" ")[0]}.</h1><p>A considered space for essential documentation.</p></div><Link className="suite-button suite-button-primary" href="/dashboard/sr-packets/new"><InterfaceIcon name="plus" width={17} height={17} /> New S&amp;R packet</Link></div>
+    <section className="suite-hero" aria-labelledby="hero-title"><div className="suite-hero-copy"><p className="suite-eyebrow">PRECISION IN EVERY EPISODE</p><h2 id="hero-title">Less friction.<br /><em>More focus.</em></h2><p>From the first detail to the final review.<br />Keep your documentation clear, connected and moving.</p><Link className="suite-hero-link" href={firstDraft ? `/dashboard/sr-packets/new?packetId=${firstDraft.id}` : "/dashboard/sr-packets/new"}>{firstDraft ? "Continue the latest draft" : "Begin a new packet"}<InterfaceIcon name="arrow" width={18} height={18} /></Link></div><div className="suite-hero-art" aria-hidden="true"><div className="suite-orbit suite-orbit-one" /><div className="suite-orbit suite-orbit-two" /><div className="suite-orbit suite-orbit-three" /><div className="suite-document-art"><span>SR / DOCUMENTATION</span><div className="suite-art-rule" /><InterfaceIcon name="document" width={44} height={44} /><i /><i /><i /><b>DETAILS, CONSIDERED.</b></div><span className="suite-art-caption">SR SUITE <span>—</span> THE CLINICAL COLLECTION</span></div></section>
+    {unavailable && <div role="alert" className="suite-data-alert">Packet data couldn’t be loaded. Refresh to try again; the figures below are unavailable, not zero.</div>}
+    <section className="suite-metrics" aria-label="Packet summary"><Metric label="Total packets" value={unavailable ? "—" : total} caption="Across the workspace" icon="layers" /><Metric label="In progress" value={unavailable ? "—" : drafts} caption="Drafts available to continue" icon="clock" /><Metric label="Submitted" value={unavailable ? "—" : submitted} caption="Locked documentation" icon="check" /></section>
+    <div className="suite-dashboard-columns"><section className="suite-recent-panel" aria-labelledby="recent-title"><div className="suite-panel-heading"><div><p className="suite-eyebrow">YOUR DOCUMENTATION</p><h2 id="recent-title">Recent S&amp;R packets</h2></div><Link href="/dashboard/sr-packets">View library <InterfaceIcon name="arrow" width={15} height={15} /></Link></div>
+      {unavailable ? <div className="suite-empty-state"><p>Recent packets are temporarily unavailable.</p></div> : !recentPackets.length ? <div className="suite-empty-state"><InterfaceIcon name="document" width={32} height={32} /><h3>A fresh page awaits.</h3><p>Your recent packets will appear here as you work.</p><Link className="suite-button suite-button-secondary" href="/dashboard/sr-packets/new">Create your first packet <InterfaceIcon name="arrow" width={16} height={16} /></Link></div> : <ul className="suite-recent-list">{recentPackets.map(p => <li key={p.id} className="recent-packet-row suite-recent-row"><Link className="suite-recent-packet-link" href={`/dashboard/sr-packets/${p.id}`}><span className="suite-patient-avatar">{p.patient.fullName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}</span><span className="suite-recent-identity"><strong>{p.patient.fullName}</strong><span>MRN {p.patient.mrn} <span className="suite-inline-divider">/</span> {format(new Date(p.createdAt), "MMM d, yyyy")}</span></span><span className={`suite-record-status ${p.submittedAt ? "is-submitted" : ""}`}><span />{p.submittedAt ? "Submitted" : "In progress"}</span></Link><div className="recent-packet-actions">{p.submittedAt ? <span className="suite-protected-label">Submitted · protected</span> : session && canDeletePacket(session.user, p) ? <DeleteReportButton kind="sr-packets" id={p.id} stayOnPage description={`${p.patient.fullName} · MRN ${p.patient.mrn} · ${format(new Date(p.createdAt), "MMM d, yyyy h:mm a")}`} /> : <span className="suite-protected-label">Draft · owner/admin deletion only</span>}</div></li>)}</ul>}
+    </section><aside className="suite-workflow-panel"><p className="suite-eyebrow">A CLEAR WAY FORWARD</p><h2>Thoughtful steps.<br />Thorough records.</h2><ol><li><span>01</span><div><strong>Start with the patient</strong><p>Confirm identity and create an episode.</p></div></li><li><span>02</span><div><strong>Document with clarity</strong><p>Work through each guided section.</p></div></li><li><span>03</span><div><strong>Review, then complete</strong><p>Check your documentation before submission.</p></div></li></ol><Link href="/dashboard/sr-packets">Explore your packet library <InterfaceIcon name="arrow" width={16} height={16} /></Link><div className="suite-discretion-note">PATIENT INFORMATION IS CONFIDENTIAL<br /><span>Keep your workspace private when stepping away.</span></div></aside></div>
+  </div>;
 }
-
-function StatCard({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
-  return (
-    <div
-      style={{
-        background: "var(--bg-elevated)",
-        border: "1px solid var(--border)",
-        borderRadius: 12,
-        padding: "20px 20px 18px",
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-      }}
-    >
-      <div>
-        <p style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", margin: 0 }}>
-          {value}
-        </p>
-        <p style={{ fontSize: 12, fontWeight: 500, color: "var(--text-2)", marginTop: 4, lineHeight: 1.3 }}>
-          {label}
-        </p>
-      </div>
-      <div
-        style={{
-          background: "var(--gold-faint)",
-          border: "1px solid var(--border)",
-          borderRadius: 8,
-          padding: 8,
-          color: "var(--gold)",
-        }}
-      >
-        {icon}
-      </div>
-    </div>
-  );
+function Metric({ label, value, caption, icon }: { label: string; value: number | string; caption: string; icon: IconName }) {
+  return <article className="suite-metric"><div><p>{label}</p><strong>{value}</strong><span>{caption}</span></div><div className="suite-metric-icon"><InterfaceIcon name={icon} /></div></article>;
 }
-
-function ActionCard({
-  href,
-  title,
-  description,
-  icon,
-}: {
-  href: string;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 16,
-        background: "var(--bg-elevated)",
-        border: "1px solid var(--border)",
-        borderRadius: 12,
-        padding: "18px 20px",
-        textDecoration: "none",
-        transition: "border-color 0.15s, background 0.15s",
-      }}
-      className="hover:border-[var(--gold)] hover:bg-[var(--bg-subtle)]"
-    >
-      <div
-        style={{
-          background: "var(--bg-subtle)",
-          border: "1px solid var(--border)",
-          borderRadius: 10,
-          padding: 10,
-          color: "var(--text-2)",
-          flexShrink: 0,
-          transition: "background 0.15s, color 0.15s",
-        }}
-      >
-        {icon}
-      </div>
-      <div style={{ flex: 1 }}>
-        <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", margin: 0 }}>{title}</p>
-        <p style={{ fontSize: 12, color: "var(--text-2)", marginTop: 3 }}>{description}</p>
-      </div>
-      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: "var(--text-3)", flexShrink: 0 }}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-      </svg>
-    </Link>
-  );
-}
-
