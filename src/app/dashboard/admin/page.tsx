@@ -1,4 +1,5 @@
 "use client";
+import PasswordForm from "@/components/PasswordForm";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -36,9 +37,9 @@ export default function AdminPage() {
 
   useEffect(() => {
     fetch("/api/users")
-      .then((r) => r.json())
+      .then(async r => { if (!r.ok) throw new Error("Unable to load users. Check your access and try again."); return r.json(); })
       .then((d) => { setUsers(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch(err => { setError(err.message); setLoading(false); });
   }, []);
 
   async function onCreate(data: CreateForm) {
@@ -119,7 +120,7 @@ export default function AdminPage() {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Password *</label>
                 <input
                   type="password"
-                  {...register("password", { required: "Password is required", minLength: { value: 8, message: "Min 8 characters" } })}
+                  {...register("password", { required: "Password is required", minLength: { value: 12, message: "Min 12 characters" } })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 {errors.password && <p className="text-red-600 text-xs mt-1">{errors.password.message}</p>}
@@ -130,7 +131,7 @@ export default function AdminPage() {
                   {...register("role", { required: true })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                  {ROLES.filter(r => session?.user.role === "ADMIN" || r === "STAFF" || r === "PROVIDER").map((r) => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
               <div>
@@ -172,6 +173,7 @@ export default function AdminPage() {
         </div>
       )}
 
+      {error && !showForm && <p role="alert" className="text-red-700 mb-4">{error}</p>}
       {/* Users table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gray-50 border-b border-gray-200 px-5 py-3">
@@ -190,6 +192,7 @@ export default function AdminPage() {
                   <th className="text-left font-semibold text-gray-600 px-4 py-3">Title</th>
                   <th className="text-left font-semibold text-gray-600 px-4 py-3">Unit</th>
                   <th className="text-left font-semibold text-gray-600 px-4 py-3">Created</th>
+                  {session?.user.role === "ADMIN" && <th scope="col" className="px-4 py-3 text-left">Account recovery</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -207,6 +210,7 @@ export default function AdminPage() {
                     <td className="px-4 py-3 text-gray-500 text-xs">
                       {new Date(u.createdAt).toLocaleDateString()}
                     </td>
+                    {session?.user.role === "ADMIN" && <td className="px-4 py-3 min-w-64"><details><summary className="cursor-pointer underline">Reset password</summary><PasswordForm userId={u.id} userName={`${u.name} (${u.email})`} /></details></td>}
                   </tr>
                 ))}
               </tbody>
