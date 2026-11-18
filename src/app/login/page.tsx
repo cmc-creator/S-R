@@ -29,7 +29,7 @@ export default function LoginPage() {
     <div className="suite-login">
       <section className="suite-login-story" aria-label="SR Suite documentation workspace">
         <div className="suite-login-brand"><SRSuiteLockup size={38} /><span>THE DOCUMENTATION WORKSPACE</span></div>
-        <div className="suite-login-editorial"><p className="suite-eyebrow">CONSIDERED SOFTWARE. ESSENTIAL WORK.</p><h1>Clarity in the<br /><em>moments that matter.</em></h1><p>A focused workspace for seclusion and restraint documentation. Designed to bring structure to the details, and confidence to your day.</p><div className="suite-login-divider" /><span>01 — DOCUMENT WITH PURPOSE<br />02 — KEEP EVERY DETAIL CONNECTED<br />03 — REVIEW WITH CARE</span></div>
+        <div className="suite-login-editorial"><p className="suite-eyebrow">CONSIDERED SOFTWARE. ESSENTIAL WORK.</p><h1>But did you<br /><em>document it?</em></h1><p>A focused workspace for seclusion and restraint documentation. Designed to bring structure to the details, and confidence to your day.</p><div className="suite-login-divider" /><span>01 — DOCUMENT WITH PURPOSE<br />02 — KEEP EVERY DETAIL CONNECTED<br />03 — REVIEW WITH CARE</span></div>
         <p className="suite-login-story-footer">SR SUITE <span> / </span> DESTINY SPRINGS</p>
         <div className="suite-login-orbit" aria-hidden="true" />
       </section>
