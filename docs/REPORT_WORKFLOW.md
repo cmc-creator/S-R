@@ -79,3 +79,9 @@ Verification: run the existing workflow script, TypeScript, lint and production 
 Dashboard and Packet library share a larger **New S&R packet** action: an 82px-tall metallic-gold surface, larger plus icon, strong label and short explanatory line. It expands to full width on small screens. The shine makes two short passes on entry (under five seconds total), then stops; reduced-motion disables it entirely. Smaller static gold accents on the hero link and metric icons preserve the create action's visual priority. The destination remains the existing packet creator; no permissions, fields or save behavior change.
 
 Automated render checks verify the action text and destination. Authenticated desktop/mobile layout, keyboard focus, hover and reduced-motion appearance still need isolated-preview acceptance; no new public route or authentication bypass was introduced for visual testing.
+
+## Coordinated champagne accents
+
+Gold detailing now extends to the brand mark, active navigation, dashboard card edges, patient avatars, section headers, active packet step, progress fill, patient-context panel and library row hover/links. Save & Continue, account password-submit and sign-in actions use a static metallic finish. The oversized New S&R packet action remains the strongest treatment and the only animated shine. Destructive, warning and success states are not recolored. Reduced-motion and existing print handling remain; printed shell surfaces lose decorative shadows. This is CSS-only styling with no field, route, data or authorization changes.
+
+Public sign-in can be inspected without credentials; signed-in workspace appearance still needs isolated-preview testing with synthetic records. Confirm both themes, narrow layouts, active/hover/focus/disabled states and printed output before rollout.

@@ -643,3 +643,50 @@ option { background: var(--bg-elevated); color: var(--text); }
   .suite-new-packet-action:hover { transform: none; }
 }
 @media print { .suite-new-packet-action { display: none !important; } }
+
+/* Champagne collection: supporting details, subordinate to packet creation. */
+:root { --gold-metal: linear-gradient(115deg, #b58a43, #e4c98f 36%, #f3dfb1 52%, #c69d56); --gold-line: color-mix(in srgb, var(--gold) 32%, transparent); }
+.suite-sidebar .suite-brand > div > div,
+.suite-login-brand > div > div { background: var(--gold-metal) !important; box-shadow: inset 0 1px 0 #fff4d6aa, 0 3px 12px #00000018; }
+.suite-sidebar .suite-brand > div > div > span,
+.suite-login-brand > div > div > span { color: #172a38 !important; }
+.suite-workspace-monogram, .suite-avatar { background: linear-gradient(135deg, #e6c98c25, #c69d5608); border-color: #d8bc8260; box-shadow: inset 0 1px 0 #f3dfb11a; }
+.suite-navigation a[aria-current="page"] { border-color: #d8bc8255; background: linear-gradient(110deg, #d8bc822b, #d8bc8208); box-shadow: inset 3px 0 0 #dfc58c, inset 0 1px 0 #f3dfb10d; }
+.suite-navigation a:not([aria-current]):hover { border-color: #d8bc8228; background: linear-gradient(110deg, #d8bc8210, transparent); }
+.suite-hero { border: 1px solid #d8bc8240; box-shadow: inset 0 1px 0 #f3dfb114, var(--suite-shadow); }
+.suite-hero::after { content: ''; position: absolute; pointer-events: none; top: 0; left: 5%; right: 5%; height: 1px; background: linear-gradient(90deg, transparent, #f2d8a5aa, transparent); }
+.suite-document-art { border-color: #dfc68f66; box-shadow: inset 0 1px 0 #f3dfb11a, 12px 20px 32px #00000015; }
+.suite-metric, .suite-recent-panel, .suite-workflow-panel,
+.suite-shell .packet-results, .suite-shell .packet-list-search,
+.suite-shell .packet-progress-summary, .suite-shell .packet-form-card,
+.suite-shell .account-card { border-color: var(--gold-line); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gold) 10%, transparent), var(--suite-shadow); }
+.suite-metric { position: relative; overflow: hidden; }
+.suite-metric::before { content: ''; position: absolute; top: 0; left: 22px; width: 40px; height: 2px; background: var(--gold-metal); }
+.suite-panel-heading, .suite-shell .packet-results-table th,
+.suite-shell .packet-form-card > div:first-child { background: linear-gradient(115deg, var(--gold-faint), transparent 75%) !important; }
+.suite-patient-avatar { background: linear-gradient(135deg, var(--gold-faint), var(--bg-elevated)); border-color: var(--gold-line); color: var(--gold); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gold) 10%, transparent); }
+.suite-shell .suite-button-secondary, .suite-shell .packet-outline-action { border-color: var(--gold-line); background: linear-gradient(125deg, var(--gold-faint), var(--bg-elevated)); }
+.suite-shell .suite-button-secondary:hover, .suite-shell .packet-outline-action:hover { border-color: var(--gold); }
+/* Warm action finish, without applying gold to dangerous or success actions. */
+.suite-shell .packet-form-actions button[type="submit"],
+.suite-shell .account-password-form button[type="submit"],
+.suite-login-form-card button[type="submit"] { background: var(--gold-metal) !important; color: #172a38 !important; border: 1px solid #ddc18b !important; box-shadow: inset 0 1px 0 #fff4d699, 0 4px 12px #9a753719; }
+.suite-shell .packet-form-actions button[type="submit"]:hover:not(:disabled),
+.suite-shell .account-password-form button[type="submit"]:hover:not(:disabled),
+.suite-login-form-card button[type="submit"]:hover:not(:disabled) { box-shadow: inset 0 1px 0 #fff4d6cc, 0 5px 18px #9a753730; }
+.suite-shell .packet-form-actions { border-color: var(--gold-line); }
+.suite-shell .packet-step[aria-current="step"] { border-color: var(--gold-line); background: linear-gradient(115deg, var(--gold-faint), var(--bg-elevated)); box-shadow: inset 3px 0 0 var(--gold); }
+.suite-shell .packet-step[aria-current="step"] .packet-step-number { background: var(--gold-metal); border-color: #ddc18b; color: #172a38; box-shadow: inset 0 1px 0 #fff4d680; }
+.suite-shell .packet-progress-summary progress::-webkit-progress-value { background: var(--gold-metal); }
+.suite-shell .packet-progress-summary progress::-moz-progress-bar { background: var(--gold-metal); }
+.suite-shell .packet-patient-context { border-color: var(--gold-line); border-left-color: var(--gold); background: linear-gradient(115deg, var(--gold-faint), var(--bg-elevated) 65%); }
+.suite-shell .packet-save-notice { border-color: var(--gold-line); }
+.suite-shell .packet-open-link { text-decoration-color: var(--gold); }
+.suite-shell .packet-results-table tbody tr:hover { background: var(--gold-faint); }
+.suite-login-form h2::after { content: ''; display: block; height: 2px; width: 45px; background: var(--gold-metal); margin-top: 20px; }
+.suite-login-divider { background: var(--gold-metal); }
+.suite-login-form-card input:focus, .suite-shell input:focus, .suite-shell textarea:focus, .suite-shell select:focus { border-color: var(--gold) !important; }
+@media print {
+  .suite-shell *, .suite-shell *::before, .suite-shell *::after { box-shadow: none !important; text-shadow: none !important; }
+  .suite-shell .packet-form-card, .suite-shell .account-card { background: white !important; border-color: #9ca3af; }
+}
