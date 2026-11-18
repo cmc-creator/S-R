@@ -198,6 +198,9 @@ async function main() {
   assert.ok(primaryActionHtml.includes('New S&amp;R packet'));
   assert.ok(primaryActionHtml.includes('Start a new documentation episode'));
   assert.ok(staffDashboard.includes('suite-new-packet-action'));
+  assert.ok(staffDashboard.includes('/artwork/gilded-arches.svg'));
+  assert.ok(renderToStaticMarkup(createElement(PacketList, { packets: [] })).includes('/artwork/gold-orbit.svg'));
+  console.log('PASS: local decorative artwork in dashboard and empty library');
   console.log('PASS: prominent gold create action preserves packet destination and accessible text');
   console.log('PASS: redesigned dashboard metrics, single active navigation link, role-aware administration and unavailable-data state');
   console.log('PASS: recent-packet deletion controls, owner/staff/admin permissions and submitted protection');
