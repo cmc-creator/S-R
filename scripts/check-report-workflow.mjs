@@ -157,7 +157,7 @@ async function main() {
   const { default: Dashboard } = load('src/app/dashboard/page.tsx', {
     'next/navigation': { useRouter: () => ({ push() {}, refresh() {} }) },
     '@/lib/auth': { auth: async () => ({ user: dashboardUser }) },
-    '@/lib/prisma': { prisma: { sRPacket: { findMany: async () => rows, count: async () => rows.length } } },
+    '@/lib/prisma': { prisma: { sRPacket: { findMany: async () => rows, count: async args => !args ? rows.length : args.where.submittedAt === null ? 2 : 1 } } },
   });
   const staffDashboard = renderToStaticMarkup(await Dashboard());
   assert.equal((staffDashboard.match(/Delete draft packet<\/button>/g) ?? []).length, 1);
@@ -167,6 +167,31 @@ async function main() {
   dashboardUser = { ...dashboardUser, id: 'admin', role: 'ADMIN' };
   const adminDashboard = renderToStaticMarkup(await Dashboard());
   assert.equal((adminDashboard.match(/Delete draft packet<\/button>/g) ?? []).length, 2);
+  assert.ok(staffDashboard.includes('Less friction.'));
+  assert.ok(staffDashboard.includes('Recent S&amp;R packets'));
+  assert.ok(staffDashboard.includes('Continue the latest draft'));
+  assert.equal((staffDashboard.match(/class="suite-metric"/g) ?? []).length, 3);
+  const { default: Navbar } = load('src/components/Navbar.tsx', {
+    'next/navigation': { usePathname: () => '/dashboard/sr-packets/new' },
+    'next-auth/react': { signOut: () => {} },
+    '@/components/ThemeToggle': { ThemeToggle: () => null },
+  });
+  const navigation = renderToStaticMarkup(createElement(Navbar, { user: { id: 'owner', name: 'Synthetic Staff', role: 'STAFF', email: 'synthetic@example.invalid' } }));
+  assert.equal((navigation.match(/aria-current="page"/g) ?? []).length, 1);
+  assert.ok(navigation.includes('Create packet'));
+  assert.ok(!navigation.includes('Administration'));
+  const adminNavigation = renderToStaticMarkup(createElement(Navbar, { user: { name: 'Synthetic Admin', role: 'ADMIN', email: 'synthetic@example.invalid' } }));
+  assert.ok(adminNavigation.includes('Administration'));
+  assert.ok(adminNavigation.includes('Quality &amp; insights'));
+  const { default: UnavailableDashboard } = load('src/app/dashboard/page.tsx', {
+    'next/navigation': { useRouter: () => ({ push() {}, refresh() {} }) },
+    '@/lib/auth': { auth: async () => ({ user: dashboardUser }) },
+    '@/lib/prisma': { prisma: { sRPacket: { findMany: async () => { throw new Error('Synthetic outage'); }, count: async () => 0 } } },
+  });
+  const unavailableHtml = renderToStaticMarkup(await UnavailableDashboard());
+  assert.ok(unavailableHtml.includes('role="alert"'));
+  assert.equal((unavailableHtml.match(/<strong>—<\/strong>/g) ?? []).length, 3);
+  console.log('PASS: redesigned dashboard metrics, single active navigation link, role-aware administration and unavailable-data state');
   console.log('PASS: recent-packet deletion controls, owner/staff/admin permissions and submitted protection');
   console.log('PASS: packet list resume/view destinations and empty state');
   console.log('PASS: workspace active section, locked steps, saved progress, unsaved state and accessible field errors');

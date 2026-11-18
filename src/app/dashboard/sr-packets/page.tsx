@@ -25,32 +25,7 @@ export default async function SRPacketsPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", margin: 0 }}>
-            S&amp;R Packets
-          </h1>
-          <p style={{ fontSize: 13, color: "var(--text-2)", marginTop: 4 }}>
-            Seclusion / Physical Hold / Chemical Restraint Documentation
-          </p>
-        </div>
-        <Link
-          href="/dashboard/sr-packets/new"
-          style={{
-            background: "var(--accent)",
-            color: "var(--accent-fg)",
-            fontSize: 13,
-            fontWeight: 600,
-            padding: "9px 16px",
-            borderRadius: 8,
-            textDecoration: "none",
-            whiteSpace: "nowrap",
-          }}
-        >
-          + New Packet
-        </Link>
-      </div>
+      <div className="suite-page-heading"><div><p className="suite-eyebrow">ORGANIZED. ACCESSIBLE. CONSIDERED.</p><h1>Packet library</h1><p>Your documentation, together in one place. Find a record or pick up where you left off.</p></div><Link className="suite-button suite-button-primary" href="/dashboard/sr-packets/new">+ New S&amp;R packet</Link></div>
 
       <PacketList packets={packets.map(p => ({
         id: p.id, patientName: p.patient.fullName, mrn: p.patient.mrn,

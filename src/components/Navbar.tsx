@@ -5,164 +5,32 @@ import { signOut } from "next-auth/react";
 import { Role } from "@prisma/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SRSuiteLockup } from "@/components/SRSuiteLogo";
+import InterfaceIcon, { type IconName } from "@/components/InterfaceIcon";
 
-interface Props {
-  user: { name: string; email: string; role: Role; title?: string };
-}
-
-function NavLink({ href, children, exact }: { href: string; children: React.ReactNode; exact?: boolean }) {
-  const pathname = usePathname();
-  const isActive = exact ? pathname === href : pathname.startsWith(href);
-  return (
-    <Link
-      href={href}
-      style={{
-        fontSize: 13,
-        fontWeight: 500,
-        color: isActive ? "var(--text)" : "var(--text-2)",
-        textDecoration: "none",
-        padding: "4px 0",
-        position: "relative",
-        transition: "color 0.15s",
-        letterSpacing: "0.005em",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {children}
-      {isActive && (
-        <span
-          style={{
-            position: "absolute",
-            bottom: -1,
-            left: 0,
-            right: 0,
-            height: 1,
-            background: "var(--gold)",
-            borderRadius: 1,
-          }}
-        />
-      )}
-    </Link>
-  );
-}
-
+interface Props { user: { name: string; email: string; role: Role; title?: string }; }
 export default function Navbar({ user }: Props) {
-  const initials = user.name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
-  return (
-    <nav
-      style={{
-        background: "var(--bg-elevated)",
-        borderBottom: "1px solid var(--border)",
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1280,
-          margin: "0 auto",
-          padding: "0 24px",
-          height: 56,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 24,
-        }}
-      >
-        {/* Left: Logo + Nav */}
-        <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
-          <Link href="/dashboard" style={{ textDecoration: "none", flexShrink: 0 }}>
-            <SRSuiteLockup size={26} />
-          </Link>
-
-          {/* Nav links */}
-          <div
-            className="hidden md:flex"
-            style={{ alignItems: "center", gap: 24 }}
-          >
-            <NavLink href="/dashboard" exact>Dashboard</NavLink>
-            <NavLink href="/dashboard/sr-packets/new">New S&amp;R</NavLink>
-            <NavLink href="/dashboard/sr-packets">All Packets</NavLink>
-            {(user.role === Role.ADMIN || user.role === Role.SUPERVISOR) && (
-              <>
-                <NavLink href="/dashboard/analytics">QAPI</NavLink>
-                <NavLink href="/dashboard/admin">Admin</NavLink>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Right: User + Toggle + Sign out */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-          {/* User info */}
-          <div className="hidden md:flex" style={{ alignItems: "center", gap: 10 }}>
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: "50%",
-                background: "var(--gold-faint)",
-                border: "1px solid var(--border)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 11,
-                fontWeight: 700,
-                color: "var(--gold)",
-                flexShrink: 0,
-              }}
-            >
-              {initials}
-            </div>
-            <div style={{ lineHeight: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)" }}>
-                {user.name}
-              </div>
-              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
-                {user.title ?? user.role}
-              </div>
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div
-            className="hidden md:block"
-            style={{ width: 1, height: 18, background: "var(--border)" }}
-          />
-
-          <ThemeToggle />
-
-          {/* Divider */}
-          <div
-            style={{ width: 1, height: 18, background: "var(--border)" }}
-          />
-
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            style={{
-              fontSize: 13,
-              fontWeight: 500,
-              color: "var(--text-2)",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: "4px 8px",
-              borderRadius: 6,
-              transition: "color 0.15s, background 0.15s",
-              whiteSpace: "nowrap",
-            }}
-          >
-            Sign out
-          </button>
-        </div>
-      </div>
-    </nav>
-  );
+  const pathname = usePathname();
+  const links: { href: string; label: string; icon: IconName; active: boolean }[] = [
+    { href: "/dashboard", label: "Overview", icon: "overview", active: pathname === "/dashboard" },
+    { href: "/dashboard/sr-packets/new", label: "Create packet", icon: "plus", active: pathname === "/dashboard/sr-packets/new" },
+    { href: "/dashboard/sr-packets", label: "Packet library", icon: "layers", active: pathname.startsWith("/dashboard/sr-packets") && pathname !== "/dashboard/sr-packets/new" },
+    ...((user.role === Role.ADMIN || user.role === Role.SUPERVISOR) ? [
+      { href: "/dashboard/analytics", label: "Quality & insights", icon: "chart" as const, active: pathname.startsWith("/dashboard/analytics") },
+      { href: "/dashboard/admin", label: "Administration", icon: "settings" as const, active: pathname.startsWith("/dashboard/admin") },
+    ] : []),
+  ];
+  const current = links.find(link => link.active)?.label ?? "Documentation";
+  const initials = user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  return <>
+    <a href="#workspace-content" className="suite-skip-link">Skip to workspace</a>
+    <aside className="suite-sidebar no-print">
+      <Link href="/dashboard" className="suite-brand" aria-label="SR Suite overview"><SRSuiteLockup size={34} /><span>DOCUMENTATION WORKSPACE</span></Link>
+      <div className="suite-workspace-label"><span className="suite-workspace-monogram">DS</span><div><strong>Destiny Springs</strong><span>Seclusion &amp; restraint</span></div></div>
+      <p className="suite-nav-eyebrow">Workspace</p>
+      <nav aria-label="Main navigation" className="suite-navigation">{links.map(link => <Link key={link.href} href={link.href} aria-current={link.active ? "page" : undefined}><InterfaceIcon name={link.icon} /><span>{link.label}</span>{link.active && <span className="suite-active-dot" />}</Link>)}</nav>
+      <div className="suite-sidebar-note"><span className="suite-nav-eyebrow">Built around your work</span><p>One episode.<br />Every detail in its place.</p><Link href="/dashboard/sr-packets/new">Start a packet <InterfaceIcon name="arrow" width={15} height={15} /></Link></div>
+      <div className="suite-account"><span className="suite-avatar">{initials}</span><div><strong>{user.name}</strong><span>{user.title ?? user.role.toLowerCase()}</span></div><button type="button" onClick={() => signOut({ callbackUrl: "/login" })} aria-label="Sign out" title="Sign out">↪</button></div>
+    </aside>
+    <div className="suite-topbar no-print"><div><span className="suite-topbar-brand">SR SUITE</span><span className="suite-breadcrumb">Workspace <span>/</span> <strong>{current}</strong></span></div><div className="suite-topbar-actions"><span className="suite-confidential">Confidential workspace</span><ThemeToggle /><button className="suite-mobile-signout" type="button" onClick={() => signOut({ callbackUrl: "/login" })}>Sign out</button></div></div>
+  </>;
 }
