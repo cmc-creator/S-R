@@ -122,7 +122,7 @@ export default function FaceToFaceForm({ srPacketId, onNext, onBack, initialValu
   );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <form onSubmit={handleSubmit(onSubmit)} className="packet-section-form space-y-5">
       <SRSection title="One Hour Face to Face Evaluation">
         <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded px-3 py-2">
           *Must be completed within 1 hour of the START of the intervention*
@@ -294,7 +294,7 @@ export default function FaceToFaceForm({ srPacketId, onNext, onBack, initialValu
 
       {error && <div role="alert" className="text-red-700 text-sm bg-red-50 border border-red-200 rounded px-4 py-3 whitespace-pre-line">{error}</div>}
 
-      <div className="flex justify-between">
+      <div className="packet-form-actions">
         <button type="button" onClick={onBack} className={btnSecondary}>← Back</button>
         <button type="submit" disabled={saving} className={btnPrimary}>{saving ? "Saving…" : "Save & Continue →"}</button>
       </div>

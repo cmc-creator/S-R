@@ -105,6 +105,34 @@ async function main() {
   const { renderToStaticMarkup } = nativeRequire('react-dom/server');
   const html = renderToStaticMarkup(await PrintPage({ params: Promise.resolve({ id: 'synthetic' }), searchParams: Promise.resolve({}) }));
   for (const content of ['Synthetic Patient', 'TEST-ONLY', 'DRAFT', 'DO NOT FILE IN PATIENT RECORD', 'Synthetic opportunity', 'Synthetic comment', 'Patient was an immediate risk', 'Military Time']) assert.ok(html.includes(content), `Printed packet must contain ${content}`);
+  const { createElement } = nativeRequire('react');
+  const { default: Workspace } = load('src/components/sr/PacketWorkspace.tsx');
+  const props = { step: 2, maxStep: 2, completed: [1], packetId: 'synthetic', patientLabel: 'Synthetic Patient · MRN TEST-ONLY', guidance: 'Synthetic guidance', dirty: [], onEdit: () => {}, onNavigate: () => {}, children: createElement('input', { name: 'synthetic' }) };
+  const workspaceHtml = renderToStaticMarkup(createElement(Workspace, props));
+  assert.equal((workspaceHtml.match(/aria-current="step"/g) ?? []).length, 1);
+  assert.ok(workspaceHtml.includes('value="1" max="7"'));
+  assert.equal((workspaceHtml.match(/<button[^>]*disabled/g) ?? []).length, 6);
+  assert.ok(workspaceHtml.includes('MRN TEST-ONLY'));
+  const dirtyHtml = renderToStaticMarkup(createElement(Workspace, { ...props, dirty: [2] }));
+  assert.ok(dirtyHtml.includes('Unsaved changes'));
+  const { SRField } = load('src/components/sr/PhysicianOrderForm.tsx');
+  const fieldHtml = renderToStaticMarkup(createElement(SRField, { label: 'Synthetic label', error: 'Required' }, createElement('input', { type: 'text' })));
+  const labelId = fieldHtml.match(/for="([^"]+)"/)[1];
+  assert.ok(fieldHtml.includes(`id="${labelId}"`));
+  assert.ok(fieldHtml.includes('aria-invalid="true"'));
+  assert.ok(fieldHtml.includes(`aria-describedby="${labelId}-error"`));
+  const { default: PacketList } = load('src/components/sr/PacketList.tsx');
+  const listHtml = renderToStaticMarkup(createElement(PacketList, { packets: [
+    { id: 'draft-only', patientName: 'Synthetic Patient', mrn: 'TEST-ONLY', dateLabel: 'Jan 1, 2026', submitted: false, types: ['Physical'], incidentId: null },
+    { id: 'submitted-only', patientName: 'Synthetic Patient', mrn: 'TEST-ONLY', dateLabel: 'Jan 2, 2026', submitted: true, types: [], incidentId: 'synthetic-incident' },
+  ] }));
+  assert.ok(listHtml.includes('/dashboard/sr-packets/new?packetId=draft-only'));
+  assert.ok(listHtml.includes('/dashboard/sr-packets/submitted-only'));
+  assert.ok(listHtml.includes('/dashboard/incidents/synthetic-incident'));
+  assert.ok(!listHtml.includes('?q='));
+  assert.ok(renderToStaticMarkup(createElement(PacketList, { packets: [] })).includes('Create a packet'));
+  console.log('PASS: packet list resume/view destinations and empty state');
+  console.log('PASS: workspace active section, locked steps, saved progress, unsaved state and accessible field errors');
   console.log('PASS: printed saved values and checklist wording');
   console.log('PASS: section validation, save/reopen mappings, API field filtering, incident hard stops, submitted locks, deletion permissions and protected records');
 }
