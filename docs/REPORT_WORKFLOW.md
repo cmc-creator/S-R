@@ -57,3 +57,11 @@ The packet creator now uses a desktop section rail (horizontal on smaller screen
 The packet list filters instantly by patient name/MRN and in-progress/submitted status. Search stays in component memory, not in the URL or browser storage. Draft list actions resume the existing packet; submitted actions open the overview. The overview prioritizes Edit / Continue and puts destructive deletion inside Manage draft. This is presentation/navigation work only: no reporting fields, clinical validators, API contracts, schema or database migrations changed.
 
 Before release, verify the authenticated UI on an isolated preview using synthetic patient records at desktop and phone sizes: section focus/scrolling, sidebar navigation, keyboard tab order, errors and label focus, sticky actions, dirty/save indicators, leave/reload warning, in-page list filters, and resume/view destinations. The repository does not document an isolated preview test account; seed defaults must not be assumed safe for a live/shared clinical database. Static-render and TypeScript/build tests are not browser verification.
+
+## Delete from Recent Packets
+
+On the dashboard, eligible unsubmitted packets show **Delete draft packet** beside the row (not inside its navigation link). Staff may delete their own drafts; supervisors and administrators may delete any draft. Incident-report deletion permissions are unchanged. Submitted packets show **Submitted · protected** and cannot be deleted through this action.
+
+The confirmation identifies the patient/MRN and creation time to distinguish multiple episodes. Type `DELETE` to confirm; Cancel makes no changes. Deletion is permanent and includes the packet's saved sections, not the patient or linked incident. After dashboard deletion, stay on the dashboard and refresh the recent list/count. Follow facility retention policy.
+
+Before release, use an isolated preview and synthetic records to verify confirmation, cancel, server errors, successful row/count refresh and permissions for owner, other staff and supervisor/admin. Dashboard controls have server-rendered regression coverage; authenticated browser/database deletion still requires preview test access. Never use live clinical records for destructive testing.

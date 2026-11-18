@@ -1,3 +1,4 @@
+import { canDeletePacket } from "@/lib/reports/packet-permissions";
 import { DeleteReportButton } from "@/components/ReportActions";
 import { sectionKeys, sectionIssues, toFormSection } from "@/lib/reports/sections";
 import { auth } from "@/lib/auth";
@@ -253,7 +254,7 @@ export default async function SRPacketDetailPage({ params }: { params: Promise<{
         </div>
       )}
 
-      {!packet.submittedAt && ["ADMIN", "SUPERVISOR"].includes(session.user.role) && <details className="no-print border-t border-gray-200 pt-4 text-sm"><summary className="text-gray-500 cursor-pointer">Manage draft</summary><div className="mt-3"><DeleteReportButton kind="sr-packets" id={packet.id} /></div></details>}
+      {canDeletePacket(session.user, packet) && <details className="no-print border-t border-gray-200 pt-4 text-sm"><summary className="text-gray-500 cursor-pointer">Manage draft</summary><div className="mt-3"><DeleteReportButton kind="sr-packets" id={packet.id} /></div></details>}
       {/* Created by */}
       <div className="text-xs text-gray-400 text-right pb-4">
         Created by {packet.createdBy.name} {packet.createdBy.title ? `(${packet.createdBy.title})` : ""} &bull; {format(new Date(packet.createdAt), "MM/dd/yyyy h:mm a")}
