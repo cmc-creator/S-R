@@ -311,3 +311,11 @@ option { background: var(--bg-elevated); color: var(--text); }
 .packet-empty h2 { font-size: 19px; font-weight: 650; color: var(--text); }
 .packet-empty p { color: var(--text-2); font-size: 13px; margin: 10px 0 20px; }
 .packet-list-privacy { font-size: 11px; color: var(--text-2); margin: 12px 0; }
+
+.recent-packet-row { display: flex; align-items: center; flex-wrap: wrap; }
+.recent-packet-actions { padding: 10px 20px; margin-left: auto; max-width: 100%; }
+.recent-packet-actions button { min-height: 44px; }
+@media (max-width: 599px) {
+  .recent-packet-row > a { flex-basis: 100% !important; }
+  .recent-packet-actions { padding-top: 0; }
+}

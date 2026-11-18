@@ -1,3 +1,4 @@
+import { canDeletePacket } from "./packet-permissions";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
@@ -6,7 +7,7 @@ import { NextResponse } from "next/server";
 export async function deleteReport(kind: "incident" | "packet", id: string) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!["ADMIN", "SUPERVISOR"].includes(session.user.role)) return NextResponse.json({ error: "Only supervisors and administrators can delete reports" }, { status: 403 });
+  if (kind === "incident" && !["ADMIN", "SUPERVISOR"].includes(session.user.role)) return NextResponse.json({ error: "Only supervisors and administrators can delete reports" }, { status: 403 });
   try {
     const result = await prisma.$transaction(async tx => {
       if (kind === "incident") {
@@ -18,6 +19,7 @@ export async function deleteReport(kind: "incident" | "packet", id: string) {
         const packet = await tx.sRPacket.findUnique({ where: { id } });
         if (!packet) return { status: 404, error: "Packet not found" };
         if (packet.submittedAt) return { status: 409, error: "Submitted packets cannot be deleted. Contact your records administrator." };
+        if (!canDeletePacket(session.user, packet)) return { status: 403, error: "You can only delete your own draft packets. Ask a supervisor or administrator about other packets." };
         await tx.sRMonitoringEntry.deleteMany({ where: { monitoringLog: { srPacketId: id } } });
         await tx.sRMonitoringLog.deleteMany({ where: { srPacketId: id } });
         await tx.sRPhysicianOrder.deleteMany({ where: { srPacketId: id } });

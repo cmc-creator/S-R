@@ -1,3 +1,5 @@
+import { DeleteReportButton } from "@/components/ReportActions";
+import { canDeletePacket } from "@/lib/reports/packet-permissions";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
@@ -152,12 +154,14 @@ export default async function DashboardPage() {
               {recentPackets.map((p, i) => (
                 <li
                   key={p.id}
+                  className="recent-packet-row"
                   style={{ borderBottom: i < recentPackets.length - 1 ? "1px solid var(--border-subtle)" : "none" }}
                 >
                   <Link
                     href={`/dashboard/sr-packets/${p.id}`}
                     style={{
                       display: "flex",
+                      flex: 1, minWidth: 0, gap: 16, flexWrap: "wrap",
                       alignItems: "center",
                       justifyContent: "space-between",
                       padding: "13px 20px",
@@ -198,6 +202,11 @@ export default async function DashboardPage() {
                       {format(new Date(p.createdAt), "MMM d, yyyy")}
                     </span>
                   </Link>
+                  <div className="recent-packet-actions">
+                    {p.submittedAt ? <span className="text-xs text-gray-500">Submitted · protected</span> : session && canDeletePacket(session.user, p) ?
+                      <DeleteReportButton kind="sr-packets" id={p.id} stayOnPage description={`${p.patient.fullName} · MRN ${p.patient.mrn} · ${format(new Date(p.createdAt), "MMM d, yyyy h:mm a")}`} /> :
+                      <span className="text-xs text-gray-500">Draft · owner/admin deletion only</span>}
+                  </div>
                 </li>
               ))}
             </ul>

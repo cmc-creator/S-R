@@ -9,7 +9,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import ts from 'typescript';
 const root = path.resolve(__dirname, '..');
 function load(file, mocks = {}) {
-  const filename = path.join(root, file);
+  let filename = path.join(root, file);
+  if (!fs.existsSync(filename) && filename.endsWith(".ts") && fs.existsSync(filename + "x")) filename += "x";
   const m = new Module(filename);
   m.filename = filename; m.paths = Module._nodeModulePaths(path.dirname(filename));
   m.require = name => {
@@ -58,7 +59,7 @@ assert.ok(incidentIssues({ ...incident, notificationsNA: false, notifications: [
 assert.ok(incidentIssues({ ...incident, nursingAssessmentNA: false }).length);
 
 async function main() {
-  const packet = { id: 'synthetic', submittedAt: null };
+  const packet = { id: 'synthetic', createdById: 'owner', submittedAt: null };
   const prisma = { $queryRaw: async () => [], sRPacket: { findUnique: async () => packet } };
   const { prepareSection } = load('src/lib/reports/save-section.ts', { '@/lib/prisma': { prisma } });
   const models = { physicianOrder: 'SRPhysicianOrder', faceToFaceEval: 'SRFaceToFaceEvaluation', monitoringLogs: 'SRMonitoringLog', terminationSummary: 'SRTerminationSummary', patientDebriefing: 'SRPatientDebriefing', staffDebriefing: 'SRStaffDebriefing', afterActionCritique: 'SRAfterActionCritique' };
@@ -77,9 +78,21 @@ async function main() {
   for (const model of ['sRMonitoringEntry', 'sRMonitoringLog', 'sRPhysicianOrder', 'sRFaceToFaceEvaluation', 'sRTerminationSummary', 'sRPatientDebriefing', 'sRStaffDebriefing', 'sRAfterActionCritique']) tx[model] = { deleteMany: async () => {} };
   const { deleteReport } = load('src/lib/reports/delete-report.ts', { '@/lib/auth': { auth: async () => session }, '@/lib/prisma': { prisma: { $transaction: async fn => fn(tx) } } });
   assert.equal((await deleteReport('incident', 'synthetic')).status, 401);
-  session = { user: { role: 'STAFF' } };
+  session = { user: { id: 'other-staff', role: 'STAFF' } };
   assert.equal((await deleteReport('incident', 'synthetic')).status, 403);
+  assert.equal((await deleteReport('packet', 'synthetic')).status, 409);
+  packet.submittedAt = null;
+  assert.equal((await deleteReport('packet', 'synthetic')).status, 403);
+  packet.submittedAt = new Date();
+  session.user.id = 'owner';
+  assert.equal((await deleteReport('packet', 'synthetic')).status, 409);
+  packet.submittedAt = null;
+  assert.equal((await deleteReport('packet', 'synthetic')).status, 204);
+  assert.equal(deleted, 1);
+  deleted = 0;
+  session.user.id = 'other-staff';
   session.user.role = 'SUPERVISOR';
+  packet.submittedAt = new Date();
   assert.equal((await deleteReport('packet', 'synthetic')).status, 409);
   packet.submittedAt = null;
   assert.equal((await deleteReport('packet', 'synthetic')).status, 204);
@@ -131,6 +144,30 @@ async function main() {
   assert.ok(listHtml.includes('/dashboard/incidents/synthetic-incident'));
   assert.ok(!listHtml.includes('?q='));
   assert.ok(renderToStaticMarkup(createElement(PacketList, { packets: [] })).includes('Create a packet'));
+  const { canDeletePacket } = load('src/lib/reports/packet-permissions.ts');
+  assert.equal(canDeletePacket({ id: 'owner', role: 'STAFF' }, { createdById: 'owner', submittedAt: null }), true);
+  assert.equal(canDeletePacket({ id: 'other', role: 'STAFF' }, { createdById: 'owner', submittedAt: null }), false);
+  assert.equal(canDeletePacket({ id: 'admin', role: 'ADMIN' }, { createdById: 'owner', submittedAt: new Date() }), false);
+  const rows = [
+    { id: 'own-draft', createdById: 'owner', submittedAt: null },
+    { id: 'other-draft', createdById: 'other', submittedAt: null },
+    { id: 'own-submitted', createdById: 'owner', submittedAt: new Date() },
+  ].map(p => ({ ...p, createdAt: new Date(when), patient: syntheticPacket.patient }));
+  let dashboardUser = { id: 'owner', role: 'STAFF', name: 'Synthetic Staff' };
+  const { default: Dashboard } = load('src/app/dashboard/page.tsx', {
+    'next/navigation': { useRouter: () => ({ push() {}, refresh() {} }) },
+    '@/lib/auth': { auth: async () => ({ user: dashboardUser }) },
+    '@/lib/prisma': { prisma: { sRPacket: { findMany: async () => rows, count: async () => rows.length } } },
+  });
+  const staffDashboard = renderToStaticMarkup(await Dashboard());
+  assert.equal((staffDashboard.match(/Delete draft packet<\/button>/g) ?? []).length, 1);
+  assert.ok(staffDashboard.includes('Submitted · protected'));
+  assert.ok(staffDashboard.includes('owner/admin deletion only'));
+  assert.ok(!(staffDashboard.match(/<a\b[^>]*>[\s\S]*?<\/a>/g) ?? []).some(link => link.includes('<button')), 'delete buttons must not be nested in navigation links');
+  dashboardUser = { ...dashboardUser, id: 'admin', role: 'ADMIN' };
+  const adminDashboard = renderToStaticMarkup(await Dashboard());
+  assert.equal((adminDashboard.match(/Delete draft packet<\/button>/g) ?? []).length, 2);
+  console.log('PASS: recent-packet deletion controls, owner/staff/admin permissions and submitted protection');
   console.log('PASS: packet list resume/view destinations and empty state');
   console.log('PASS: workspace active section, locked steps, saved progress, unsaved state and accessible field errors');
   console.log('PASS: printed saved values and checklist wording');
