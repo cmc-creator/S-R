@@ -1,8 +1,8 @@
+import NewPacketAction from "@/components/sr/NewPacketAction";
 import PacketList from "@/components/sr/PacketList";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 import { format } from "date-fns";
 
 export default async function SRPacketsPage() {
@@ -25,7 +25,7 @@ export default async function SRPacketsPage() {
 
   return (
     <div>
-      <div className="suite-page-heading"><div><p className="suite-eyebrow">ORGANIZED. ACCESSIBLE. CONSIDERED.</p><h1>Packet library</h1><p>Your documentation, together in one place. Find a record or pick up where you left off.</p></div><Link className="suite-button suite-button-primary" href="/dashboard/sr-packets/new">+ New S&amp;R packet</Link></div>
+      <div className="suite-page-heading"><div><p className="suite-eyebrow">ORGANIZED. ACCESSIBLE. CONSIDERED.</p><h1>Packet library</h1><p>Your documentation, together in one place. Find a record or pick up where you left off.</p></div><NewPacketAction /></div>
 
       <PacketList packets={packets.map(p => ({
         id: p.id, patientName: p.patient.fullName, mrn: p.patient.mrn,

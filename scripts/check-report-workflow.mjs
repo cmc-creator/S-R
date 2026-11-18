@@ -191,6 +191,13 @@ async function main() {
   const unavailableHtml = renderToStaticMarkup(await UnavailableDashboard());
   assert.ok(unavailableHtml.includes('role="alert"'));
   assert.equal((unavailableHtml.match(/<strong>—<\/strong>/g) ?? []).length, 3);
+  const { default: NewPacketAction } = load('src/components/sr/NewPacketAction.tsx');
+  const primaryActionHtml = renderToStaticMarkup(createElement(NewPacketAction));
+  assert.ok(primaryActionHtml.includes('href="/dashboard/sr-packets/new"'));
+  assert.ok(primaryActionHtml.includes('New S&amp;R packet'));
+  assert.ok(primaryActionHtml.includes('Start a new documentation episode'));
+  assert.ok(staffDashboard.includes('suite-new-packet-action'));
+  console.log('PASS: prominent gold create action preserves packet destination and accessible text');
   console.log('PASS: redesigned dashboard metrics, single active navigation link, role-aware administration and unavailable-data state');
   console.log('PASS: recent-packet deletion controls, owner/staff/admin permissions and submitted protection');
   console.log('PASS: packet list resume/view destinations and empty state');
