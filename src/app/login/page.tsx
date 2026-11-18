@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -28,10 +29,10 @@ export default function LoginPage() {
   return (
     <div className="suite-login">
       <section className="suite-login-story" aria-label="SR Suite documentation workspace">
+        <Image className="suite-login-artwork" src="/artwork/gilded-arches.svg" alt="" fill sizes="(max-width: 699px) 100vw, 55vw" priority />
         <div className="suite-login-brand"><SRSuiteLockup size={38} /><span>THE DOCUMENTATION WORKSPACE</span></div>
         <div className="suite-login-editorial"><p className="suite-eyebrow">CONSIDERED SOFTWARE. ESSENTIAL WORK.</p><h1>But did you<br /><em>document it?</em></h1><p>A focused workspace for seclusion and restraint documentation. Designed to bring structure to the details, and confidence to your day.</p><div className="suite-login-divider" /><span>01 — DOCUMENT WITH PURPOSE<br />02 — KEEP EVERY DETAIL CONNECTED<br />03 — REVIEW WITH CARE</span></div>
         <p className="suite-login-story-footer">SR SUITE <span> / </span> DESTINY SPRINGS</p>
-        <div className="suite-login-orbit" aria-hidden="true" />
       </section>
       <section className="suite-login-access" aria-labelledby="login-title">
         <div className="suite-login-toolbar"><span>STAFF ACCESS</span><ThemeToggle /></div>
