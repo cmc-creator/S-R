@@ -167,7 +167,7 @@ async function main() {
   dashboardUser = { ...dashboardUser, id: 'admin', role: 'ADMIN' };
   const adminDashboard = renderToStaticMarkup(await Dashboard());
   assert.equal((adminDashboard.match(/Delete draft packet<\/button>/g) ?? []).length, 2);
-  assert.ok(staffDashboard.includes('Less friction.'));
+  assert.ok(staffDashboard.includes('But did you<br/><em>document it?</em>'));
   assert.ok(staffDashboard.includes('Recent S&amp;R packets'));
   assert.ok(staffDashboard.includes('Continue the latest draft'));
   assert.equal((staffDashboard.match(/class="suite-metric"/g) ?? []).length, 3);
@@ -179,6 +179,7 @@ async function main() {
   const navigation = renderToStaticMarkup(createElement(Navbar, { user: { id: 'owner', name: 'Synthetic Staff', role: 'STAFF', email: 'synthetic@example.invalid' } }));
   assert.equal((navigation.match(/aria-current="page"/g) ?? []).length, 1);
   assert.ok(navigation.includes('Create packet'));
+  assert.ok(navigation.includes('But did you<br/>document it?'));
   assert.ok(!navigation.includes('Administration'));
   const adminNavigation = renderToStaticMarkup(createElement(Navbar, { user: { name: 'Synthetic Admin', role: 'ADMIN', email: 'synthetic@example.invalid' } }));
   assert.ok(adminNavigation.includes('Administration'));
